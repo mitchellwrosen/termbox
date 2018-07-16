@@ -19,7 +19,6 @@ module Termbox
     -- * Terminal contents
   , putCell
   , clear
-  , setClearAttributes
   , present
     -- * Terminal mode
   , OutputMode(..)
@@ -144,16 +143,11 @@ withBuffer m = do
     MVector.new (w*h)
   pure ()
 
--- | Clear the back buffer.
-clear :: IO ()
-clear =
-  Tb.clear
-
--- | Set the foreground and background colors to apply to the back buffer on
--- 'clear'.
-setClearAttributes :: Color -> Color -> IO ()
-setClearAttributes fg bg =
+-- | Clear the back buffer with the given foreground and background attributes.
+clear :: Color -> Color -> IO ()
+clear fg bg = do
   Tb.setClearAttributes (colorToWord fg) (colorToWord bg)
+  Tb.clear
 
 -- | Display the back buffer.
 present :: IO ()
