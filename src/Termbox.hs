@@ -11,8 +11,7 @@ module Termbox
   ( -- * Initialization
     main
     -- * Terminal size
-  , width
-  , height
+  , size
     -- * Cursor
   , setCursor
   , hideCursor
@@ -88,15 +87,10 @@ main =
 -- Terminal size
 --------------------------------------------------------------------------------
 
--- | Get the terminal width.
-width :: IO Int
-width =
-  Tb.width
-
--- | Get the terminal height.
-height :: IO Int
-height =
-  Tb.height
+-- | Get the terminal width and height.
+size :: IO (Int, Int)
+size =
+  (,) <$> Tb.width <*> Tb.height
 
 --------------------------------------------------------------------------------
 -- Cursor
