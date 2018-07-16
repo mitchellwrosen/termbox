@@ -19,7 +19,7 @@ module Termbox
     -- * Terminal contents
   , putCell
   , clear
-  , present
+  , flush
     -- * Terminal mode
   , OutputMode(..)
   , getOutputMode
@@ -144,15 +144,18 @@ withBuffer m = do
   pure ()
 
 -- | Clear the back buffer with the given foreground and background attributes.
-clear :: Color -> Color -> IO ()
+clear
+  :: Color -- ^ Foreground
+  -> Color -- ^ Background
+  -> IO ()
 clear fg bg = do
   Tb.setClearAttributes (colorToWord fg) (colorToWord bg)
   Tb.clear
 
--- | Display the back buffer.
-present :: IO ()
-present =
-  Tb.present-- ^ Background color
+-- | Synchronize the internal back buffer with the terminal.
+flush :: IO ()
+flush =
+  Tb.present
 
 --------------------------------------------------------------------------------
 -- Terminal mode
