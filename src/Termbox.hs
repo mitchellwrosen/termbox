@@ -17,7 +17,7 @@ module Termbox
   , setCursor
   , hideCursor
     -- * Terminal contents
-  , putCell
+  , setCell
   , clear
   , flush
     -- * Terminal mode
@@ -116,20 +116,18 @@ hideCursor =
 -- Terminal contents
 --------------------------------------------------------------------------------
 
-data Cell = Cell
-  { cellCh :: !Char
-  , cellFg :: !Color
-  , cellBg :: !Color
-  }
--- | Put a cell at the given coordinates.
-putCell
+-- | A 'Cell' contains a character, foreground attribute, and background
+-- attribute.
+data Cell
+  = Cell !Char !Color !Color
+
+-- | Set the 'Cell' at the given coordinates.
+setCell
   :: Int -- ^ Column
   -> Int -- ^ Row
-  -> Char -- ^ Character
-  -> Color -- ^ Foreground color
-  -> Color -- ^ Background color
+  -> Cell -- ^ Cell
   -> IO ()
-putCell x y ch fg bg =
+setCell x y (Cell ch fg bg) =
   Tb.changeCell x y ch (colorToWord fg) (colorToWord bg)
 
 withBuffer
