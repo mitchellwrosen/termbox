@@ -27,8 +27,8 @@ module Termbox
   , Event(..)
   , Key(..)
   , pollEvent
-    -- * Colors
-  , Color
+    -- * Attributes
+  , Attr
   , black
   , red
   , green
@@ -113,7 +113,7 @@ hideCursor =
 -- | A 'Cell' contains a character, foreground attribute, and background
 -- attribute.
 data Cell
-  = Cell !Char !Color !Color
+  = Cell !Char !Attr !Attr
 
 -- | Set the 'Cell' at the given coordinates.
 setCell
@@ -122,7 +122,7 @@ setCell
   -> Cell -- ^ Cell
   -> IO ()
 setCell x y (Cell ch fg bg) =
-  Tb.changeCell x y ch (colorToWord fg) (colorToWord bg)
+  Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
 withBuffer
   :: ∀ a. (∀ m. PrimMonad m => MVector (PrimState m) Cell -> m a)
@@ -137,11 +137,11 @@ withBuffer m = do
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear
-  :: Color -- ^ Foreground
-  -> Color -- ^ Background
+  :: Attr -- ^ Foreground
+  -> Attr -- ^ Background
   -> IO ()
 clear fg bg = do
-  Tb.setClearAttributes (colorToWord fg) (colorToWord bg)
+  Tb.setClearAttributes (attrToWord fg) (attrToWord bg)
   Tb.clear
 
 -- | Synchronize the internal back buffer with the terminal.
@@ -384,83 +384,83 @@ parseKey = \case
   Tb.KeyTab -> KeyTab
 
 --------------------------------------------------------------------------------
--- Colors
+-- Attributes
 --------------------------------------------------------------------------------
 
-data Color
-  = Color !Word16 {- color -} !Word16 {- attr -}
+data Attr
+  = Attr !Word16 {- color -} !Word16 {- attr -}
   deriving (Eq)
 
-instance Monoid Color where
-  mempty :: Color
+instance Monoid Attr where
+  mempty :: Attr
   mempty =
-    Color Tb._DEFAULT 0
+    Attr Tb._DEFAULT 0
 
-instance Num Color where
-  fromInteger :: Integer -> Color
+instance Num Attr where
+  fromInteger :: Integer -> Attr
   fromInteger n
     | n >= 0 && n < 256 =
-        Color (fromIntegral n) 0
+        Attr (fromIntegral n) 0
     | otherwise =
-        error ("Color.fromInteger: " ++ show n ++ " out of range [0..255]")
+        error ("Attr.fromInteger: " ++ show n ++ " out of range [0..255]")
 
-  (+) = error ("Color.(+): not defined")
-  (*) = error ("Color.(*): not defined")
-  (-) = error ("Color.(-): not defined")
-  abs = error ("Color.abs: not defined")
-  signum = error ("Color.signum: not defined")
+  (+) = error ("Attr.(+): not defined")
+  (*) = error ("Attr.(*): not defined")
+  (-) = error ("Attr.(-): not defined")
+  abs = error ("Attr.abs: not defined")
+  signum = error ("Attr.signum: not defined")
 
 -- | Right-biased color; attributes are merged.
-instance Semigroup Color where
-  (<>) :: Color -> Color -> Color
-  Color  0 ax <> Color cy ay = Color cy (ax .|. ay)
-  Color cx ax <> Color  0 ay = Color cx (ax .|. ay)
-  Color  _ ax <> Color cy ay = Color cy (ax .|. ay)
+instance Semigroup Attr where
+  (<>) :: Attr -> Attr -> Attr
+  Attr  0 ax <> Attr cy ay = Attr cy (ax .|. ay)
+  Attr cx ax <> Attr  0 ay = Attr cx (ax .|. ay)
+  Attr  _ ax <> Attr cy ay = Attr cy (ax .|. ay)
 
-colorToWord :: Color -> Word16
-colorToWord (Color x y) =
+attrToWord :: Attr -> Word16
+attrToWord (Attr x y) =
   x .|. y
 
-black :: Color
+black :: Attr
 black =
-  Color Tb._BLACK 0
+  Attr Tb._BLACK 0
 
-red :: Color
+red :: Attr
 red =
-  Color Tb._RED 0
+  Attr Tb._RED 0
 
-green :: Color
+green :: Attr
 green =
-  Color Tb._GREEN 0
+  Attr Tb._GREEN 0
 
-yellow :: Color
+yellow :: Attr
 yellow =
-  Color Tb._YELLOW 0
+  Attr Tb._YELLOW 0
 
-blue :: Color
+blue :: Attr
 blue =
-  Color Tb._BLUE 0
+  Attr Tb._BLUE 0
 
-magenta :: Color
+magenta :: Attr
 magenta =
-  Color Tb._MAGENTA 0
+  Attr Tb._MAGENTA 0
 
-cyan :: Color
+cyan :: Attr
 cyan =
-  Color Tb._CYAN 0
+  Attr Tb._CYAN 0
 
-white :: Color
+white :: Attr
 white =
-  Color Tb._WHITE 0
+  Attr Tb._WHITE 0
 
-bold :: Color
+bold :: Attr
 bold =
-  Color Tb._DEFAULT Tb._BOLD
+  Attr Tb._DEFAULT Tb._BOLD
 
-underline :: Color
+underline :: Attr
 underline =
-  Color Tb._DEFAULT Tb._UNDERLINE
+  Attr Tb._DEFAULT Tb._UNDERLINE
 
-reverse :: Color
+reverse :: Attr
 reverse =
-  Color Tb._DEFAULT Tb._REVERSE
+  Attr Tb._DEFAULT Tb._REVERSE
