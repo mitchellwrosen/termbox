@@ -24,7 +24,7 @@ module Termbox
     -- * Terminal mode
   , OutputMode(..)
   , getOutputMode
-  , selectOutputMode
+  , setOutputMode
     -- * Event handling
   , Event(..)
   , Key(..)
@@ -142,7 +142,7 @@ instance Storable Cell where
   poke ptr (Cell ch fg bg) = do
     Tb.setCellCh ptr ch
     Tb.setCellFg ptr (attrToWord fg)
-    Tb.setCellFg ptr (attrToWord bg)
+    Tb.setCellBg ptr (attrToWord bg)
 
 -- | Set the 'Cell' at the given coordinates.
 setCell
@@ -154,7 +154,7 @@ setCell x y (Cell ch fg bg) =
   Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's internal back buffer as a two-dimensional array of
--- 'Cell's indexed by their @x@ and @y@ coordinates.
+-- 'Cell's indexed by their @(y, x)@ coordinates.
 --
 --
 -- *Warning* The data is only valid until the next call to 'clear' or 'flush'.
@@ -172,7 +172,7 @@ cellBuffer =
     -> Int
     -> IO (StorableArray (Int, Int) Cell)
   mkbuffer buffer w h =
-    Array.unsafeForeignPtrToStorableArray buffer ((0, 0), (w-1, h-1))
+    Array.unsafeForeignPtrToStorableArray buffer ((0, 0), (h-1, w-1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear
@@ -211,8 +211,8 @@ getOutputMode =
     Tb.OutputModeGrayscale -> OutputModeGrayscale
     Tb.OutputModeCurrent -> error "getOutputMode: OutputModeCurrent"
 
-selectOutputMode :: OutputMode -> IO ()
-selectOutputMode mode =
+setOutputMode :: OutputMode -> IO ()
+setOutputMode mode =
   void (Tb.selectOutputMode (f mode))
  where
   f :: OutputMode -> Tb.OutputMode

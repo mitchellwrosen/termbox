@@ -34,9 +34,10 @@ library
   hs-source-dirs:
     src
 
-executable termbox-example-output
+executable termbox-example-colors
   build-depends:
-      base
+      array
+    , base
     , termbox
   ghc-options:
     -rtsopts
@@ -45,4 +46,4 @@ executable termbox-example-output
   hs-source-dirs:
     examples
   main-is:
-    Output.hs
+    Colors.hs
