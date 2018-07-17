@@ -201,9 +201,37 @@ _WHITE =
 -- Types
 --------------------------------------------------------------------------------
 
-data Cell
+sizeofCell :: Int
+sizeofCell =
+  {# sizeof tb_cell #}
 
-{# pointer *tb_cell as CellPtr -> Cell #}
+alignofCell :: Int
+alignofCell =
+  {# alignof tb_cell #}
+
+getCellCh :: Ptr a -> IO Char
+getCellCh =
+  fmap (toEnum . fromIntegral) . {# get tb_cell->ch #}
+
+getCellFg :: Ptr a -> IO Word16
+getCellFg =
+  fmap fromIntegral . {# get tb_cell->fg #}
+
+getCellBg :: Ptr a -> IO Word16
+getCellBg =
+  fmap fromIntegral . {# get tb_cell->bg #}
+
+setCellCh :: Ptr a -> Char -> IO ()
+setCellCh ptr =
+  {# set tb_cell.ch #} ptr . fromIntegral . fromEnum
+
+setCellFg :: Ptr a -> Word16 -> IO ()
+setCellFg ptr =
+  {# set tb_cell.fg #} ptr . fromIntegral
+
+setCellBg :: Ptr a -> Word16 -> IO ()
+setCellBg ptr =
+  {# set tb_cell.bg #} ptr . fromIntegral
 
 data Event
   = Event !EventType Mod Key Char Int Int Int Int
@@ -240,29 +268,11 @@ instance Storable Event where
     {# set tb_event.x #} ptr (fromIntegral x)
     {# set tb_event.y #} ptr (fromIntegral y)
 
-
-peekEventH :: Ptr Event -> IO Int
-peekEventH =
-  fmap fromIntegral . {# get tb_event->h #}
-
-peekEventX :: Ptr Event -> IO Int
-peekEventX =
-  fmap fromIntegral . {# get tb_event->x #}
-
-peekEventY :: Ptr Event -> IO Int
-peekEventY =
-  fmap fromIntegral . {# get tb_event->y #}
-
 {# pointer *tb_event as EventPtr -> Event #}
 
 --------------------------------------------------------------------------------
 -- Functions
 --------------------------------------------------------------------------------
-
-{#
-  fun tb_cell_buffer as cellBuffer
-    { } -> `CellPtr'
-#}
 
 {#
   fun tb_change_cell as changeCell
@@ -307,11 +317,6 @@ peekEventY =
 {#
   fun tb_present as present
     { } -> `()'
-#}
-
-{#
-  fun tb_put_cell as putCell
-    { `Int', `Int', `CellPtr' } -> `()'
 #}
 
 {#

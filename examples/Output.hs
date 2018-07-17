@@ -7,7 +7,7 @@ import Data.Foldable (for_)
 import qualified Termbox as Tb
 
 main :: IO ()
-main = do
+main =
   Tb.main $ do
     let
       loop :: [Tb.OutputMode] -> IO ()
@@ -33,10 +33,8 @@ main = do
 
 draw :: Tb.OutputMode -> IO ()
 draw mode = do
-  Tb.clear
-
-  w <- Tb.width
-  h <- Tb.height
+  Tb.clear mempty mempty
+  (w, h) <- Tb.size
 
   let
     coords :: [(Int, Int)]
@@ -48,28 +46,28 @@ draw mode = do
   case mode of
     Tb.OutputModeNormal -> do
       let
-        colors :: [Tb.Color]
+        colors :: [Tb.Attr]
         colors =
           (<>) <$> allAttrs <*> allColors
 
       for_ (zip coords ((,) <$> colors <*> colors)) $ \((y, x), (bg, fg)) ->
-        Tb.putCell x y 'x' fg bg
+        Tb.setCell x y (Tb.Cell 'x' fg bg)
 
     Tb.OutputModeGrayscale -> do
       let
-        colors :: [Tb.Color]
+        colors :: [Tb.Attr]
         colors =
           (<>) <$> [mempty] <*> map fromInteger [0..23]
 
       for_ (zip coords ((,) <$> colors <*> colors)) $ \((y, x), (bg, fg)) ->
-        Tb.putCell x y 'x' fg bg
+        Tb.setCell x y (Tb.Cell 'x' fg bg)
 
     _ -> do
       pure ()
 
-  Tb.present
+  Tb.flush
 
-allAttrs :: [Tb.Color]
+allAttrs :: [Tb.Attr]
 allAttrs =
   [ mempty
   , Tb.bold
@@ -77,7 +75,7 @@ allAttrs =
   , Tb.bold <> Tb.underline
   ]
 
-allColors :: [Tb.Color]
+allColors :: [Tb.Attr]
 allColors =
   [ mempty
   , Tb.black

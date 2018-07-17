@@ -4,9 +4,8 @@ version: 0
 
 library
   build-depends:
-      base
-    , primitive
-    , vector
+      array
+    , base
   build-tool-depends:
     c2hs:c2hs
   default-language:

@@ -16,7 +16,9 @@ module Termbox
   , setCursor
   , hideCursor
     -- * Terminal contents
+  , Cell(..)
   , setCell
+  , cellBuffer
   , clear
   , flush
     -- * Terminal mode
@@ -49,16 +51,16 @@ import Prelude hiding (mod, reverse)
 import qualified Termbox.Internal as Tb
 
 import Control.Exception
-import Control.Monad.Primitive
-import Data.Bits ((.|.))
+import Control.Monad (join)
+import Data.Array.Storable
+import Data.Bits ((.|.), (.&.))
 import Data.Functor (void)
-import Data.Vector (MVector)
 import Data.Word
-import Foreign (Ptr)
+import Foreign (ForeignPtr, Ptr, newForeignPtr_)
 import Foreign.Marshal.Alloc (alloca)
-import Foreign.Storable (peek)
+import Foreign.Storable
 
-import qualified Data.Vector.Mutable as MVector
+import qualified Data.Array.Storable.Internals as Array
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -115,6 +117,33 @@ hideCursor =
 data Cell
   = Cell !Char !Attr !Attr
 
+instance Show Cell where
+  show (Cell ch fg bg) =
+    "Cell " ++ show ch ++ " " ++ show (attrToWord fg) ++ " " ++
+      show (attrToWord bg)
+
+instance Storable Cell where
+  sizeOf :: Cell -> Int
+  sizeOf _ =
+    Tb.sizeofCell
+
+  alignment :: Cell -> Int
+  alignment _ =
+    Tb.alignofCell
+
+  peek :: Ptr Cell -> IO Cell
+  peek ptr =
+    Cell
+      <$> Tb.getCellCh ptr
+      <*> (wordToAttr <$>  Tb.getCellFg ptr)
+      <*> (wordToAttr <$> Tb.getCellBg ptr)
+
+  poke :: Ptr Cell -> Cell -> IO ()
+  poke ptr (Cell ch fg bg) = do
+    Tb.setCellCh ptr ch
+    Tb.setCellFg ptr (attrToWord fg)
+    Tb.setCellFg ptr (attrToWord bg)
+
 -- | Set the 'Cell' at the given coordinates.
 setCell
   :: Int -- ^ Column
@@ -124,16 +153,26 @@ setCell
 setCell x y (Cell ch fg bg) =
   Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
-withBuffer
-  :: ∀ a. (∀ m. PrimMonad m => MVector (PrimState m) Cell -> m a)
-  -> IO ()
-withBuffer m = do
-  buffer <- Tb.cellBuffer
-  cells <- do
-    w <- Tb.width
-    h <- Tb.height
-    MVector.new (w*h)
-  pure ()
+-- | Get the terminal's internal back buffer as a two-dimensional array of
+-- 'Cell's indexed by their @x@ and @y@ coordinates.
+--
+--
+-- *Warning* The data is only valid until the next call to 'clear' or 'flush'.
+cellBuffer :: IO (StorableArray (Int, Int) Cell)
+cellBuffer =
+  join
+    (mkbuffer
+      <$> (tb_cell_buffer >>= newForeignPtr_)
+      <*> Tb.width
+      <*> Tb.height)
+ where
+  mkbuffer
+    :: ForeignPtr Cell
+    -> Int
+    -> Int
+    -> IO (StorableArray (Int, Int) Cell)
+  mkbuffer buffer w h =
+    Array.unsafeForeignPtrToStorableArray buffer ((0, 0), (w-1, h-1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear
@@ -417,6 +456,10 @@ instance Semigroup Attr where
   Attr cx ax <> Attr  0 ay = Attr cx (ax .|. ay)
   Attr  _ ax <> Attr cy ay = Attr cy (ax .|. ay)
 
+wordToAttr :: Word16 -> Attr
+wordToAttr w =
+  Attr (w .&. 0x00FF) (w .&. 0xFF00)
+
 attrToWord :: Attr -> Word16
 attrToWord (Attr x y) =
   x .|. y
@@ -464,3 +507,10 @@ underline =
 reverse :: Attr
 reverse =
   Attr Tb._DEFAULT Tb._REVERSE
+
+--------------------------------------------------------------------------------
+-- Foreign imports
+--------------------------------------------------------------------------------
+
+foreign import ccall safe "termbox.h tb_cell_buffer"
+  tb_cell_buffer :: IO (Ptr Cell)
