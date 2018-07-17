@@ -259,16 +259,6 @@ instance Storable Event where
 #}
 
 {#
-  fun tb_init_fd as initFd
-    { `Int' } -> `Int'
-#}
-
-{#
-  fun tb_init_file as initFile
-    { `String' } -> `Int'
-#}
-
-{#
   fun tb_peek_event as peekEvent
     { `EventPtr', `Int' } -> `Int'
 #}
@@ -311,21 +301,6 @@ instance Storable Event where
 {#
   fun tb_width as width
     { } -> `Int'
-#}
-
-{#
-  fun pure tb_utf8_char_length as utf8CharLength
-    { `Char' } -> `Int'
-#}
-
-{#
-  fun tb_utf8_char_to_unicode as utf8CharToUnicode
-    { castPtr `Ptr Word32', `String' } -> `Int'
-#}
-
-{#
-  fun tb_utf8_unicode_to_char as utf8UnicodeToChar
-    { castPtr `Ptr Char', `Word32' } -> `Int'
 #}
 
 --------------------------------------------------------------------------------
