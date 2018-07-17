@@ -5,11 +5,7 @@
 import Control.Monad
 import Data.Foldable
 
-import qualified Data.Array.MArray as Array
-import qualified Data.Array.Storable as Array
 import qualified Termbox as Tb
-import Data.Ix
-import Foreign
 
 main :: IO ()
 main = do

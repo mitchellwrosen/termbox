@@ -36,8 +36,7 @@ library
 
 executable termbox-example-colors
   build-depends:
-      array
-    , base
+      base
     , termbox
   ghc-options:
     -rtsopts

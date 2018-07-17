@@ -18,57 +18,31 @@ import Foreign.C
 -- Constants
 --------------------------------------------------------------------------------
 
+_INPUT_CURRENT, _INPUT_ESC, _INPUT_ALT, _INPUT_MOUSE :: Int
 _HIDE_CURSOR :: Int
-_HIDE_CURSOR =
-  {# const TB_HIDE_CURSOR #}
+_BOLD, _UNDERLINE, _REVERSE :: Word16
+_DEFAULT, _BLACK, _RED, _GREEN, _YELLOW, _BLUE, _MAGENTA, _CYAN, _WHITE :: Word16
 
-_BOLD :: Word16
-_BOLD =
-  {# const TB_BOLD #}
+_INPUT_CURRENT = {# const TB_INPUT_CURRENT #}
+_INPUT_ESC     = {# const TB_INPUT_ESC     #}
+_INPUT_ALT     = {# const TB_INPUT_ALT     #}
+_INPUT_MOUSE   = {# const TB_INPUT_MOUSE   #}
 
-_UNDERLINE :: Word16
-_UNDERLINE =
-  {# const TB_UNDERLINE #}
+_HIDE_CURSOR   = {# const TB_HIDE_CURSOR #}
 
-_REVERSE :: Word16
-_REVERSE =
-  {# const TB_REVERSE #}
+_BOLD          = {# const TB_BOLD #}
+_UNDERLINE     = {# const TB_UNDERLINE #}
+_REVERSE       = {# const TB_REVERSE #}
 
-_DEFAULT :: Word16
-_DEFAULT =
-  {# const TB_DEFAULT #}
-
-_BLACK :: Word16
-_BLACK =
-  {# const TB_BLACK #}
-
-_RED :: Word16
-_RED =
-  {# const TB_RED #}
-
-_GREEN :: Word16
-_GREEN =
-  {# const TB_GREEN #}
-
-_YELLOW :: Word16
-_YELLOW  =
-  {# const TB_YELLOW #}
-
-_BLUE :: Word16
-_BLUE  =
-  {# const TB_BLUE #}
-
-_MAGENTA :: Word16
-_MAGENTA =
-  {# const TB_MAGENTA #}
-
-_CYAN :: Word16
-_CYAN  =
-  {# const TB_CYAN #}
-
-_WHITE :: Word16
-_WHITE =
-  {# const TB_WHITE #}
+_DEFAULT       = {# const TB_DEFAULT #}
+_BLACK         = {# const TB_BLACK #}
+_RED           = {# const TB_RED #}
+_GREEN         = {# const TB_GREEN #}
+_YELLOW        = {# const TB_YELLOW #}
+_BLUE          = {# const TB_BLUE #}
+_MAGENTA       = {# const TB_MAGENTA #}
+_CYAN          = {# const TB_CYAN #}
+_WHITE         = {# const TB_WHITE #}
 
 --------------------------------------------------------------------------------
 -- Enums
@@ -79,7 +53,7 @@ _WHITE =
     { TB_EVENT_KEY as EventKey
     , TB_EVENT_RESIZE as EventResize
     , TB_EVENT_MOUSE as EventMouse
-    } deriving (Eq, Ord, Show)
+    }
 #}
 
 {#
@@ -88,16 +62,7 @@ _WHITE =
     , TB_EUNSUPPORTED_TERMINAL as UnsupportedTerminal
     , TB_EFAILED_TO_OPEN_TTY as FailedToOpenTTY
     , TB_EPIPE_TRAP_ERROR as PipeTrapError
-    } deriving (Eq, Ord, Show)
-#}
-
-{#
-  enum define InputMode
-    { TB_INPUT_CURRENT as InputCurrent
-    , TB_INPUT_ESC     as InputEsc
-    , TB_INPUT_ALT     as InputAlt
-    , TB_INPUT_MOUSE   as InputMouse
-    } deriving (Eq, Ord, Show)
+    }
 #}
 
 {#
@@ -175,15 +140,14 @@ _WHITE =
     , TB_KEY_SPACE as KeySpace
     , TB_KEY_BACKSPACE2 as KeyBackspace2
     , TB_KEY_CTRL_8 as KeyCtrl8
-    } deriving (Eq, Ord, Show)
+    } deriving (Show)
 #}
 
 {#
   enum define Mod
     { 0 as ModNone
     , TB_MOD_ALT as ModAlt
-    , TB_MOD_MOTION as ModMotion
-    } deriving (Eq, Ord, Show)
+    }
 #}
 
 {#
@@ -193,7 +157,7 @@ _WHITE =
     , TB_OUTPUT_256 as OutputMode256
     , TB_OUTPUT_216 as OutputMode216
     , TB_OUTPUT_GRAYSCALE as OutputModeGrayscale
-    } deriving (Eq, Ord, Show)
+    }
 
 #}
 
@@ -321,7 +285,7 @@ instance Storable Event where
 
 {#
   fun tb_select_input_mode as selectInputMode
-    { `InputMode' } -> `Int'
+    { `Int' } -> `Int'
 #}
 
 {#

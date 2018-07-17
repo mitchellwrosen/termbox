@@ -21,7 +21,10 @@ module Termbox
   , cellBuffer
   , clear
   , flush
-    -- * Terminal mode
+    -- * Terminal modes
+  , InputMode(..)
+  , getInputMode
+  , setInputMode
   , OutputMode(..)
   , getOutputMode
   , setOutputMode
@@ -116,6 +119,7 @@ hideCursor =
 -- attribute.
 data Cell
   = Cell !Char !Attr !Attr
+  deriving (Eq)
 
 instance Show Cell where
   show (Cell ch fg bg) =
@@ -156,7 +160,6 @@ setCell x y (Cell ch fg bg) =
 -- | Get the terminal's internal back buffer as a two-dimensional array of
 -- 'Cell's indexed by their @(y, x)@ coordinates.
 --
---
 -- *Warning* The data is only valid until the next call to 'clear' or 'flush'.
 cellBuffer :: IO (StorableArray (Int, Int) Cell)
 cellBuffer =
@@ -192,6 +195,36 @@ flush =
 -- Terminal mode
 --------------------------------------------------------------------------------
 
+data InputMode
+  = InputModeEsc
+  | InputModeEscMouse
+  | InputModeAlt
+  | InputModeAltMouse
+  deriving (Eq, Ord, Show)
+
+getInputMode :: IO InputMode
+getInputMode =
+  f <$> Tb.selectInputMode Tb._INPUT_CURRENT
+ where
+  f :: Int -> InputMode
+  f = \case
+    1 -> InputModeEsc
+    2 -> InputModeAlt
+    5 -> InputModeEscMouse
+    6 -> InputModeAltMouse
+    n -> error ("getInputMode: " ++ show n)
+
+setInputMode :: InputMode -> IO ()
+setInputMode =
+  void . Tb.selectInputMode . f
+ where
+  f :: InputMode -> Int
+  f = \case
+    InputModeEsc -> Tb._INPUT_ESC
+    InputModeEscMouse -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
+    InputModeAlt -> Tb._INPUT_ALT
+    InputModeAltMouse -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
+
 data OutputMode
   = OutputModeNormal
   | OutputMode256
@@ -212,8 +245,8 @@ getOutputMode =
     Tb.OutputModeCurrent -> error "getOutputMode: OutputModeCurrent"
 
 setOutputMode :: OutputMode -> IO ()
-setOutputMode mode =
-  void (Tb.selectOutputMode (f mode))
+setOutputMode =
+  void . Tb.selectOutputMode . f
  where
   f :: OutputMode -> Tb.OutputMode
   f = \case
@@ -227,8 +260,9 @@ setOutputMode mode =
 --------------------------------------------------------------------------------
 
 data Event
-  = EventKey Key !Bool
-  | EventResize -- TODO
+  = EventKey !Key !Bool -- ^ Key event
+  | EventResize !Int !Int -- ^ Resize event (width, then height)
+  | EventMouse !Mouse !Int !Int -- ^ Mouse event (@x@, then @y@)
   deriving (Eq, Show)
 
 data Key
@@ -296,18 +330,20 @@ data Key
   | KeyF9
   | KeyHome
   | KeyInsert
-  | KeyMouseLeft
-  | KeyMouseMiddle
-  | KeyMouseRelease
-  | KeyMouseRight
-  | KeyMouseWheelDown
-  | KeyMouseWheelUp
   | KeyPageDn
   | KeyPageUp
   | KeySpace
   | KeyTab
-  deriving (Eq, Ord, Read, Show)
+  deriving (Eq, Ord, Show)
 
+data Mouse
+  = MouseLeft
+  | MouseMiddle
+  | MouseRelease
+  | MouseRight
+  | MouseWheelDown
+  | MouseWheelUp
+  deriving (Eq, Ord, Show)
 
 pollEvent :: IO Event
 pollEvent =
@@ -323,10 +359,10 @@ parseEvent :: Tb.Event -> Event
 parseEvent = \case
   Tb.Event Tb.EventKey mod key ch _ _ _ _ ->
     parseEventKey mod key ch
-  Tb.Event Tb.EventResize _ _ _ _ _ _ _ ->
-    undefined
-  Tb.Event Tb.EventMouse _ _ _ _ _ _ _ ->
-    undefined
+  Tb.Event Tb.EventResize _ _ _ w h _ _ ->
+    EventResize w h
+  Tb.Event Tb.EventMouse _ key _ _ _ x y ->
+    EventMouse (parseMouse key) x y
 
 -- | Parse a key 'Event'.
 parseEventKey :: Tb.Mod -> Tb.Key -> Char -> Event
@@ -411,16 +447,22 @@ parseKey = \case
   Tb.KeyF9 -> KeyF9
   Tb.KeyHome -> KeyHome
   Tb.KeyInsert -> KeyInsert
-  Tb.KeyMouseLeft -> KeyMouseLeft
-  Tb.KeyMouseMiddle -> KeyMouseMiddle
-  Tb.KeyMouseRelease -> KeyMouseRelease
-  Tb.KeyMouseRight -> KeyMouseRight
-  Tb.KeyMouseWheelDown -> KeyMouseWheelDown
-  Tb.KeyMouseWheelUp -> KeyMouseWheelUp
   Tb.KeyPageDn -> KeyPageDn
   Tb.KeyPageUp -> KeyPageUp
   Tb.KeySpace -> KeySpace
   Tb.KeyTab -> KeyTab
+  key -> error ("parseKey: " ++ show key)
+
+-- | Parse a 'Mouse' from a 'Tb.Key'.
+parseMouse :: Tb.Key -> Mouse
+parseMouse = \case
+  Tb.KeyMouseLeft -> MouseLeft
+  Tb.KeyMouseMiddle -> MouseMiddle
+  Tb.KeyMouseRelease -> MouseRelease
+  Tb.KeyMouseRight -> MouseRight
+  Tb.KeyMouseWheelDown -> MouseWheelDown
+  Tb.KeyMouseWheelUp -> MouseWheelUp
+  key -> error ("parseMouse: " ++ show key)
 
 --------------------------------------------------------------------------------
 -- Attributes
