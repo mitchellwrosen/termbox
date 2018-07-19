@@ -41,7 +41,7 @@ main = do
         colors
 
     Tb.flush
-    _ <- Tb.pollEvent
+    _ <- Tb.poll
 
     clear
     Tb.setOutputMode Tb.OutputModeGrayscale
@@ -62,7 +62,7 @@ main = do
         [1..23]
 
     Tb.flush
-    _ <- Tb.pollEvent
+    _ <- Tb.poll
 
     clear
     Tb.setOutputMode Tb.OutputMode216
@@ -83,7 +83,7 @@ main = do
         [1..216]
 
     Tb.flush
-    _ <- Tb.pollEvent
+    _ <- Tb.poll
 
     pure ()
 
@@ -98,11 +98,11 @@ clear = do
 string :: Int -> Int -> Tb.Attr -> Tb.Attr -> [Char] -> IO ()
 string x0 y fg bg cs =
   zipWithM_
-    (\x c -> Tb.setCell x y (Tb.Cell c fg bg))
+    (\x c -> Tb.set x y (Tb.Cell c fg bg))
     [x0..]
     cs
 
 rectangle :: Int -> Int -> Int -> Int -> Tb.Cell -> IO ()
 rectangle x0 y0 x1 y1 c =
   for_ ((,) <$> [x0..x1] <*> [y0..y1]) $ \(x, y) ->
-    Tb.setCell x y c
+    Tb.set x y c

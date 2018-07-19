@@ -7,13 +7,15 @@
 {-# language UnicodeSyntax       #-}
 
 module Termbox
-  ( -- * Initialization
+  ( -- $intro
+
+    -- * Initialization
     main
   , InitError(..)
     -- * Terminal contents
   , Cell(..)
-  , setCell
-  , cellBuffer
+  , set
+  , buffer
   , clear
   , flush
     -- * Terminal size
@@ -24,7 +26,8 @@ module Termbox
     -- * Event handling
   , Event(..)
   , Key(..)
-  , pollEvent
+  , poll
+  , PollError(..)
     -- * Attributes
   , Attr
   , black
@@ -64,6 +67,13 @@ import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable
 
 import qualified Data.Array.Storable.Internals as Array
+
+-- $intro
+-- This module is intended to be imported qualified.
+--
+-- @
+-- import qualified Termbox
+-- @
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -151,17 +161,17 @@ instance Storable Cell where
     Tb.setCellBg ptr (attrToWord bg)
 
 -- | Set the 'Cell' at the given coordinates.
-setCell :: (col ~ Int, row ~ Int) => col -> row -> Cell -> IO ()
-setCell x y (Cell ch fg bg) =
+set :: (col ~ Int, row ~ Int) => col -> row -> Cell -> IO ()
+set x y (Cell ch fg bg) =
   Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's internal back buffer as a two-dimensional array of
 -- 'Cell's indexed by their coordinates.
 --
--- __Warning__: the data is only valid until the next call to 'clear' or
+-- /Warning/: the data is only valid until the next call to 'clear' or
 -- 'flush'.
-cellBuffer :: (row ~ Int, col ~ Int) => IO (StorableArray (row, col) Cell)
-cellBuffer =
+buffer :: (row ~ Int, col ~ Int) => IO (StorableArray (row, col) Cell)
+buffer =
   join
     (mkbuffer
       <$> (tb_cell_buffer >>= newForeignPtr_)
@@ -173,8 +183,8 @@ cellBuffer =
     -> Int
     -> Int
     -> IO (StorableArray (Int, Int) Cell)
-  mkbuffer buffer w h =
-    Array.unsafeForeignPtrToStorableArray buffer ((0, 0), (h-1, w-1))
+  mkbuffer buff w h =
+    Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h-1, w-1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear :: (fg ~ Attr, bg ~ Attr) => fg -> bg -> IO ()
@@ -382,14 +392,23 @@ data Mouse
 -- You can work around this issue by polling in a background thread using the
 -- @threaded@ runtime, or simply writing event-handling code that is responsive
 -- to intuitive "quit" keys like @q@ and @Esc@.
-pollEvent :: IO Event
-pollEvent =
+--
+-- This function may throw a 'PollError' exception under mysterious
+-- circumstances that are not well-documented in the original C codebase.
+poll :: IO Event
+poll =
   alloca $ \ptr ->
     Tb.pollEvent ptr >>= \case
       -1 ->
-        throwIO (userError "pollEvent -1")
+        throwIO PollError
       _ ->
         parseEvent <$> peek ptr
+
+data PollError
+  = PollError
+  deriving Show
+
+instance Exception PollError
 
 -- | Parse an 'Event' from a 'Tb.Event'.
 parseEvent :: Tb.Event -> Event
