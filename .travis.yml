@@ -73,10 +73,10 @@ install:
 script:
   # test that source-distributions can be generated
   - (cd "." && cabal sdist)
-  - mv "."/dist/timer-wheel-*.tar.gz ${DISTDIR}/
+  - mv "."/dist/termbox-*.tar.gz ${DISTDIR}/
   - cd ${DISTDIR} || false
   - find . -maxdepth 1 -name '*.tar.gz' -exec tar -xvf '{}' \;
-  - "printf 'packages: timer-wheel-*/*.cabal\\n' > cabal.project"
+  - "printf 'packages: termbox-*/*.cabal\\n' > cabal.project"
   - cat cabal.project
   # this builds all libraries and executables (without tests/benchmarks)
   - cabal new-build -w ${HC} --disable-tests --disable-benchmarks all
@@ -88,7 +88,7 @@ script:
   - cabal new-build -w ${HC} ${TEST} ${BENCH} all
 
   # cabal check
-  - (cd timer-wheel-* && cabal check)
+  - (cd termbox-* && cabal check)
 
 # REGENDATA ["cabal.project"]
 # EOF

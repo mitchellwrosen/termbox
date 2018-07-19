@@ -5,9 +5,10 @@ version: 0.1.0
 category: User Interfaces
 description:
   This package provides a thin wrapper around @termbox v1.1.2@, a simple C
-  library for writing text-based user interfaces.
+  library for writing text-based user interfaces: <https://github.com/nsf/termbox>
   .
-  <https://github.com/nsf/termbox>
+  The full source of @termbox v1.1.2@ is bundled; you need not install any
+  system packages.
 synopsis: @termbox v1.1.2@
 author: Mitchell Rosen
 maintainer: Mitchell Rosen <mitchellwrosen@gmail.com>
@@ -21,6 +22,7 @@ tested-with: GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.3
 
 extra-source-files:
   .travis.yml
+  cbits/LICENSE
   CHANGELOG.md
   include/termbox.h
 
