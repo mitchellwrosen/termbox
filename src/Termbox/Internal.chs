@@ -8,8 +8,7 @@ module Termbox.Internal where
 
 #include <termbox.h>
 
-import Data.Char (chr, ord)
-import Data.Int
+import Data.Char (ord)
 import Data.Word
 import Foreign
 import Foreign.C

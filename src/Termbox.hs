@@ -5,29 +5,24 @@
 {-# language RankNTypes          #-}
 {-# language RecordWildCards     #-}
 {-# language ScopedTypeVariables #-}
+{-# language TypeFamilies        #-}
 {-# language UnicodeSyntax       #-}
 
 module Termbox
   ( -- * Initialization
     main
-    -- * Terminal size
-  , size
-    -- * Cursor
-  , setCursor
-  , hideCursor
+  , InitError(..)
     -- * Terminal contents
   , Cell(..)
   , setCell
   , cellBuffer
   , clear
   , flush
-    -- * Terminal modes
-  , InputMode(..)
-  , getInputMode
-  , setInputMode
-  , OutputMode(..)
-  , getOutputMode
-  , setOutputMode
+    -- * Terminal size
+  , size
+    -- * Cursor manipulation
+  , setCursor
+  , hideCursor
     -- * Event handling
   , Event(..)
   , Key(..)
@@ -45,8 +40,14 @@ module Termbox
   , bold
   , underline
   , reverse
-    -- * Exceptions
-  , InitError(..)
+    -- * Terminal modes
+  , InputMode(..)
+  , MouseMode(..)
+  , getInputMode
+  , setInputMode
+  , OutputMode(..)
+  , getOutputMode
+  , setOutputMode
   ) where
 
 import Prelude hiding (mod, reverse)
@@ -77,7 +78,8 @@ data InitError
   deriving stock (Show)
   deriving anyclass (Exception)
 
--- | Run a @termbox@ program. May throw an 'InitError' exception.
+-- | Run a @termbox@ program and restore the terminal state afterwards. May
+-- throw an 'InitError' exception.
 main :: IO a -> IO a
 main =
   bracket_
@@ -93,7 +95,7 @@ main =
 --------------------------------------------------------------------------------
 
 -- | Get the terminal width and height.
-size :: IO (Int, Int)
+size :: (width ~ Int, height ~ Int) => IO (width, height)
 size =
   (,) <$> Tb.width <*> Tb.height
 
@@ -102,7 +104,7 @@ size =
 --------------------------------------------------------------------------------
 
 -- | Set the cursor coordinates.
-setCursor :: Int -> Int -> IO ()
+setCursor :: (col ~ Int, row ~ Int) => col -> row -> IO ()
 setCursor =
   Tb.setCursor
 
@@ -149,19 +151,16 @@ instance Storable Cell where
     Tb.setCellBg ptr (attrToWord bg)
 
 -- | Set the 'Cell' at the given coordinates.
-setCell
-  :: Int -- ^ Column
-  -> Int -- ^ Row
-  -> Cell -- ^ Cell
-  -> IO ()
+setCell :: (col ~ Int, row ~ Int) => col -> row -> Cell -> IO ()
 setCell x y (Cell ch fg bg) =
   Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's internal back buffer as a two-dimensional array of
--- 'Cell's indexed by their @(y, x)@ coordinates.
+-- 'Cell's indexed by their coordinates.
 --
--- *Warning* The data is only valid until the next call to 'clear' or 'flush'.
-cellBuffer :: IO (StorableArray (Int, Int) Cell)
+-- __Warning__: the data is only valid until the next call to 'clear' or
+-- 'flush'.
+cellBuffer :: (row ~ Int, col ~ Int) => IO (StorableArray (row, col) Cell)
 cellBuffer =
   join
     (mkbuffer
@@ -178,10 +177,7 @@ cellBuffer =
     Array.unsafeForeignPtrToStorableArray buffer ((0, 0), (h-1, w-1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
-clear
-  :: Attr -- ^ Foreground
-  -> Attr -- ^ Background
-  -> IO ()
+clear :: (fg ~ Attr, bg ~ Attr) => fg -> bg -> IO ()
 clear fg bg = do
   Tb.setClearAttributes (attrToWord fg) (attrToWord bg)
   Tb.clear
@@ -195,43 +191,71 @@ flush =
 -- Terminal mode
 --------------------------------------------------------------------------------
 
+-- | The input modes.
+--
+-- * __Esc__. When ESC sequence is in the buffer and it doesn't match any known
+-- sequence, ESC means 'KeyEsc'. This is the default input mode.
+--
+-- * __Alt__. When ESC sequence is in the buffer and it doesn't match any known
+-- sequence, ESC enables the /alt/ modifier for the next keyboard event.
 data InputMode
-  = InputModeEsc
-  | InputModeEscMouse
-  | InputModeAlt
-  | InputModeAltMouse
+  = InputModeEsc MouseMode
+  | InputModeAlt MouseMode
   deriving (Eq, Ord, Show)
 
+-- | The mouse mode.
+--
+-- * __Yes__. Handle mouse events.
+--
+-- * __No__. Don't handle mouse events.
+data MouseMode
+  = MouseModeYes
+  | MouseModeNo
+  deriving (Eq, Ord, Show)
+
+-- | Get the current 'InputMode'.
 getInputMode :: IO InputMode
 getInputMode =
   f <$> Tb.selectInputMode Tb._INPUT_CURRENT
  where
   f :: Int -> InputMode
   f = \case
-    1 -> InputModeEsc
-    2 -> InputModeAlt
-    5 -> InputModeEscMouse
-    6 -> InputModeAltMouse
+    1 -> InputModeEsc MouseModeNo
+    2 -> InputModeAlt MouseModeNo
+    5 -> InputModeEsc MouseModeYes
+    6 -> InputModeAlt MouseModeYes
     n -> error ("getInputMode: " ++ show n)
 
+-- | Set the 'InputMode'.
 setInputMode :: InputMode -> IO ()
 setInputMode =
   void . Tb.selectInputMode . f
  where
   f :: InputMode -> Int
   f = \case
-    InputModeEsc -> Tb._INPUT_ESC
-    InputModeEscMouse -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
-    InputModeAlt -> Tb._INPUT_ALT
-    InputModeAltMouse -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
+    InputModeEsc MouseModeNo -> Tb._INPUT_ESC
+    InputModeEsc MouseModeYes -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
+    InputModeAlt MouseModeNo -> Tb._INPUT_ALT
+    InputModeAlt MouseModeYes -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
 
+-- | The output modes.
+--
+-- * __Normal__. Supports colors /0..8/, which includes all named color
+-- 'Attr's exported by this library, e.g. 'red'.
+--
+-- * __Grayscale__. Supports colors /0..23/.
+--
+-- * __216__. Supports colors /0..216/.
+--
+-- * __256__. Supports colors /0..255/.
 data OutputMode
   = OutputModeNormal
-  | OutputMode256
-  | OutputMode216
   | OutputModeGrayscale
+  | OutputMode216
+  | OutputMode256
   deriving (Eq, Ord, Show)
 
+-- | Get the current 'OutputMode'.
 getOutputMode :: IO OutputMode
 getOutputMode =
   f <$> Tb.selectOutputMode Tb.OutputModeCurrent
@@ -244,6 +268,7 @@ getOutputMode =
     Tb.OutputModeGrayscale -> OutputModeGrayscale
     Tb.OutputModeCurrent -> error "getOutputMode: OutputModeCurrent"
 
+-- | Set the 'OutputMode'.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
   void . Tb.selectOutputMode . f
@@ -259,12 +284,14 @@ setOutputMode =
 -- Event handling
 --------------------------------------------------------------------------------
 
+-- | A input event.
 data Event
   = EventKey !Key !Bool -- ^ Key event
   | EventResize !Int !Int -- ^ Resize event (width, then height)
-  | EventMouse !Mouse !Int !Int -- ^ Mouse event (@x@, then @y@)
+  | EventMouse !Mouse !Int !Int -- ^ Mouse event (column, then row)
   deriving (Eq, Show)
 
+-- | A key press.
 data Key
   = KeyChar Char
   | KeyArrowDown
@@ -336,6 +363,7 @@ data Key
   | KeyTab
   deriving (Eq, Ord, Show)
 
+-- | A mouse event.
 data Mouse
   = MouseLeft
   | MouseMiddle
@@ -345,6 +373,15 @@ data Mouse
   | MouseWheelUp
   deriving (Eq, Ord, Show)
 
+-- | Block until an 'Event' arrives.
+--
+-- /Note/ @termbox v1.1.2@ does not properly handle OS signals that interrupt
+-- the underlying @select@ system call, so unfortunately the familiar @Ctrl-C@
+-- will not be able to stop a program stuck in 'pollEvent'.
+--
+-- You can work around this issue by polling in a background thread using the
+-- @threaded@ runtime, or simply writing event-handling code that is responsive
+-- to intuitive "quit" keys like @q@ and @Esc@.
 pollEvent :: IO Event
 pollEvent =
   alloca $ \ptr ->
@@ -468,6 +505,19 @@ parseMouse = \case
 -- Attributes
 --------------------------------------------------------------------------------
 
+-- | A cell attribute, which includes its color, and whether or not it is
+-- bold, underlined, and/or reversed.
+--
+-- A cell can only have one color, but may be (for example) bold /and/
+-- underlined. The 'Monoid' instance combines 'Attr's this way, with a left
+-- bias. That is,
+--
+-- @
+-- red <> bold <> black <> underline = red <> bold <> underline
+-- @
+--
+-- __Warning__: the 'Num' instance is /very partial/! It only includes an
+-- implementation of 'fromInteger', for numeric literals.
 data Attr
   = Attr !Word16 {- color -} !Word16 {- attr -}
   deriving (Eq)
@@ -477,6 +527,7 @@ instance Monoid Attr where
   mempty =
     Attr Tb._DEFAULT 0
 
+-- | Only 'fromInteger' defined.
 instance Num Attr where
   fromInteger :: Integer -> Attr
   fromInteger n
@@ -491,12 +542,12 @@ instance Num Attr where
   abs = error ("Attr.abs: not defined")
   signum = error ("Attr.signum: not defined")
 
--- | Right-biased color; attributes are merged.
+-- | Left-biased color; attributes are merged.
 instance Semigroup Attr where
   (<>) :: Attr -> Attr -> Attr
   Attr  0 ax <> Attr cy ay = Attr cy (ax .|. ay)
   Attr cx ax <> Attr  0 ay = Attr cx (ax .|. ay)
-  Attr  _ ax <> Attr cy ay = Attr cy (ax .|. ay)
+  Attr cx ax <> Attr  _ ay = Attr cx (ax .|. ay)
 
 wordToAttr :: Word16 -> Attr
 wordToAttr w =
@@ -506,46 +557,57 @@ attrToWord :: Attr -> Word16
 attrToWord (Attr x y) =
   x .|. y
 
+-- | @black = 1@.
 black :: Attr
 black =
   Attr Tb._BLACK 0
 
+-- | @red = 2@.
 red :: Attr
 red =
   Attr Tb._RED 0
 
+-- | @green = 3@.
 green :: Attr
 green =
   Attr Tb._GREEN 0
 
+-- | @yellow = 4@.
 yellow :: Attr
 yellow =
   Attr Tb._YELLOW 0
 
+-- | @blue = 5@.
 blue :: Attr
 blue =
   Attr Tb._BLUE 0
 
+-- | @magenta = 6@.
 magenta :: Attr
 magenta =
   Attr Tb._MAGENTA 0
 
+-- | @cyan = 7@.
 cyan :: Attr
 cyan =
   Attr Tb._CYAN 0
 
+-- | @white = 8@.
 white :: Attr
 white =
   Attr Tb._WHITE 0
 
+-- | Bold.
 bold :: Attr
 bold =
   Attr Tb._DEFAULT Tb._BOLD
 
+-- | Underline.
 underline :: Attr
 underline =
   Attr Tb._DEFAULT Tb._UNDERLINE
 
+-- | Reverse.
 reverse :: Attr
 reverse =
   Attr Tb._DEFAULT Tb._REVERSE
