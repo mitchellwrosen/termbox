@@ -49,11 +49,13 @@ library
     -Widentities
     -Wincomplete-record-updates
     -Wincomplete-uni-patterns
-    -Wmissing-export-lists
     -Wnoncanonical-monad-instances
     -Wnoncanonical-monadfail-instances
-    -Wpartial-fields
     -Wredundant-constraints
+  if impl(ghc >= 8.4)
+    ghc-options:
+      -Wmissing-export-lists
+      -Wpartial-fields
   hs-source-dirs:
     src
   include-dirs:

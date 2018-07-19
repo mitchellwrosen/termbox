@@ -12,6 +12,7 @@ import Data.Char (ord)
 import Data.Word
 import Foreign
 import Foreign.C
+import Prelude hiding (mod)
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -185,16 +186,16 @@ getCellBg =
   fmap fromIntegral . {# get tb_cell->bg #}
 
 setCellCh :: Ptr a -> Char -> IO ()
-setCellCh ptr =
-  {# set tb_cell.ch #} ptr . fromIntegral . fromEnum
+setCellCh p =
+  {# set tb_cell.ch #} p . fromIntegral . fromEnum
 
 setCellFg :: Ptr a -> Word16 -> IO ()
-setCellFg ptr =
-  {# set tb_cell.fg #} ptr . fromIntegral
+setCellFg p =
+  {# set tb_cell.fg #} p . fromIntegral
 
 setCellBg :: Ptr a -> Word16 -> IO ()
-setCellBg ptr =
-  {# set tb_cell.bg #} ptr . fromIntegral
+setCellBg p =
+  {# set tb_cell.bg #} p . fromIntegral
 
 data Event
   = Event !EventType Mod Key Char Int Int Int Int
@@ -209,27 +210,27 @@ instance Storable Event where
     {# alignof tb_event #}
 
   peek :: Ptr Event -> IO Event
-  peek ptr =
+  peek p =
     Event
-      <$> ((toEnum . fromIntegral) <$> {# get tb_event->type #} ptr)
-      <*> ((toEnum . fromIntegral) <$> {# get tb_event->mod #} ptr)
-      <*> ((toEnum . fromIntegral) <$> {# get tb_event->key #} ptr)
-      <*> ((toEnum . fromIntegral) <$> {# get tb_event->ch #} ptr)
-      <*> (fromIntegral <$> {# get tb_event->w #} ptr)
-      <*> (fromIntegral <$> {# get tb_event->h #} ptr)
-      <*> (fromIntegral <$> {# get tb_event->x #} ptr)
-      <*> (fromIntegral <$> {# get tb_event->y #} ptr)
+      <$> ((toEnum . fromIntegral) <$> {# get tb_event->type #} p)
+      <*> ((toEnum . fromIntegral) <$> {# get tb_event->mod #} p)
+      <*> ((toEnum . fromIntegral) <$> {# get tb_event->key #} p)
+      <*> ((toEnum . fromIntegral) <$> {# get tb_event->ch #} p)
+      <*> (fromIntegral <$> {# get tb_event->w #} p)
+      <*> (fromIntegral <$> {# get tb_event->h #} p)
+      <*> (fromIntegral <$> {# get tb_event->x #} p)
+      <*> (fromIntegral <$> {# get tb_event->y #} p)
 
   poke :: Ptr Event -> Event -> IO ()
-  poke ptr (Event typ mod key ch w h x y) = do
-    {# set tb_event.type #} ptr (fromIntegral (fromEnum typ))
-    {# set tb_event.mod #} ptr (fromIntegral (fromEnum mod))
-    {# set tb_event.key #} ptr (fromIntegral (fromEnum key))
-    {# set tb_event.ch #} ptr (fromIntegral (fromEnum ch))
-    {# set tb_event.w #} ptr (fromIntegral w)
-    {# set tb_event.h #} ptr (fromIntegral h)
-    {# set tb_event.x #} ptr (fromIntegral x)
-    {# set tb_event.y #} ptr (fromIntegral y)
+  poke p (Event typ mod key ch w h x y) = do
+    {# set tb_event.type #} p (fromIntegral (fromEnum typ))
+    {# set tb_event.mod #} p (fromIntegral (fromEnum mod))
+    {# set tb_event.key #} p (fromIntegral (fromEnum key))
+    {# set tb_event.ch #} p (fromIntegral (fromEnum ch))
+    {# set tb_event.w #} p (fromIntegral w)
+    {# set tb_event.h #} p (fromIntegral h)
+    {# set tb_event.x #} p (fromIntegral x)
+    {# set tb_event.y #} p (fromIntegral y)
 
 {# pointer *tb_event as EventPtr -> Event #}
 

@@ -1,5 +1,3 @@
-{-# language DeriveAnyClass      #-}
-{-# language DerivingStrategies  #-}
 {-# language InstanceSigs        #-}
 {-# language LambdaCase          #-}
 {-# language RankNTypes          #-}
@@ -59,6 +57,7 @@ import Control.Monad (join)
 import Data.Array.Storable
 import Data.Bits ((.|.), (.&.))
 import Data.Functor (void)
+import Data.Semigroup (Semigroup(..))
 import Data.Word
 import Foreign (ForeignPtr, Ptr, newForeignPtr_)
 import Foreign.Marshal.Alloc (alloca)
@@ -75,8 +74,9 @@ data InitError
   = FailedToOpenTTY
   | PipeTrapError
   | UnsupportedTerminal
-  deriving stock (Show)
-  deriving anyclass (Exception)
+  deriving (Show)
+
+instance Exception InitError
 
 -- | Run a @termbox@ program and restore the terminal state afterwards. May
 -- throw an 'InitError' exception.
@@ -526,6 +526,10 @@ instance Monoid Attr where
   mempty :: Attr
   mempty =
     Attr Tb._DEFAULT 0
+
+  mappend :: Attr -> Attr -> Attr
+  mappend =
+    (<>)
 
 -- | Only 'fromInteger' defined.
 instance Num Attr where
