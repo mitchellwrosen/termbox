@@ -26,6 +26,7 @@ module Termbox
     -- * Event handling
   , Event(..)
   , Key(..)
+  , Mouse(..)
   , poll
   , PollError(..)
     -- * Attributes
@@ -204,26 +205,26 @@ flush =
 -- | The input modes.
 --
 -- * __Esc__. When ESC sequence is in the buffer and it doesn't match any known
--- sequence, ESC means 'KeyEsc'. This is the default input mode.
+-- sequence, ESC means 'KeyEsc'.
 --
 -- * __Alt__. When ESC sequence is in the buffer and it doesn't match any known
 -- sequence, ESC enables the /alt/ modifier for the next keyboard event.
 data InputMode
-  = InputModeEsc MouseMode
+  = InputModeEsc MouseMode -- ^ Default.
   | InputModeAlt MouseMode
   deriving (Eq, Ord, Show)
 
 -- | The mouse mode.
 --
--- * __Yes__. Handle mouse events.
---
 -- * __No__. Don't handle mouse events.
+--
+-- * __Yes__. Handle mouse events.
 data MouseMode
-  = MouseModeYes
-  | MouseModeNo
+  = MouseModeNo -- ^ Default.
+  | MouseModeYes
   deriving (Eq, Ord, Show)
 
--- | Get the current 'InputMode'.
+-- | Get the current input mode.
 getInputMode :: IO InputMode
 getInputMode =
   f <$> Tb.selectInputMode Tb._INPUT_CURRENT
@@ -236,7 +237,7 @@ getInputMode =
     6 -> InputModeAlt MouseModeYes
     n -> error ("getInputMode: " ++ show n)
 
--- | Set the 'InputMode'.
+-- | Set the input mode.
 setInputMode :: InputMode -> IO ()
 setInputMode =
   void . Tb.selectInputMode . f
@@ -251,7 +252,7 @@ setInputMode =
 -- | The output modes.
 --
 -- * __Normal__. Supports colors /0..8/, which includes all named color
--- 'Attr's exported by this library, e.g. 'red'.
+-- attributes exported by this library, e.g. 'red'.
 --
 -- * __Grayscale__. Supports colors /0..23/.
 --
@@ -259,13 +260,13 @@ setInputMode =
 --
 -- * __256__. Supports colors /0..255/.
 data OutputMode
-  = OutputModeNormal
+  = OutputModeNormal -- ^ Default.
   | OutputModeGrayscale
   | OutputMode216
   | OutputMode256
   deriving (Eq, Ord, Show)
 
--- | Get the current 'OutputMode'.
+-- | Get the current output mode.
 getOutputMode :: IO OutputMode
 getOutputMode =
   f <$> Tb.selectOutputMode Tb.OutputModeCurrent
@@ -278,7 +279,7 @@ getOutputMode =
     Tb.OutputModeGrayscale -> OutputModeGrayscale
     Tb.OutputModeCurrent -> error "getOutputMode: OutputModeCurrent"
 
--- | Set the 'OutputMode'.
+-- | Set the output mode.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
   void . Tb.selectOutputMode . f
@@ -296,12 +297,12 @@ setOutputMode =
 
 -- | A input event.
 data Event
-  = EventKey !Key !Bool -- ^ Key event
+  = EventKey !Key !Bool -- ^ Key event. The bool indicates the /alt/ modifier.
   | EventResize !Int !Int -- ^ Resize event (width, then height)
   | EventMouse !Mouse !Int !Int -- ^ Mouse event (column, then row)
   deriving (Eq, Show)
 
--- | A key press.
+-- | A key event.
 data Key
   = KeyChar Char
   | KeyArrowDown
@@ -385,7 +386,7 @@ data Mouse
 
 -- | Block until an 'Event' arrives.
 --
--- /Note/ @termbox v1.1.2@ does not properly handle OS signals that interrupt
+-- /Note/: @termbox v1.1.2@ does not properly handle OS signals that interrupt
 -- the underlying @select@ system call, so unfortunately the familiar @Ctrl-C@
 -- will not be able to stop a program stuck in 'pollEvent'.
 --
@@ -404,6 +405,7 @@ poll =
       _ ->
         parseEvent <$> peek ptr
 
+-- | An error occurred when 'poll'ing.
 data PollError
   = PollError
   deriving Show
@@ -535,7 +537,7 @@ parseMouse = \case
 -- red <> bold <> black <> underline = red <> bold <> underline
 -- @
 --
--- __Warning__: the 'Num' instance is /very partial/! It only includes an
+-- /Warning/: the 'Num' instance is /very partial/! It only includes an
 -- implementation of 'fromInteger', for numeric literals.
 data Attr
   = Attr !Word16 {- color -} !Word16 {- attr -}
@@ -550,7 +552,7 @@ instance Monoid Attr where
   mappend =
     (<>)
 
--- | Only 'fromInteger' defined.
+-- | Only 'fromInteger' is defined.
 instance Num Attr where
   fromInteger :: Integer -> Attr
   fromInteger n
@@ -620,17 +622,17 @@ white :: Attr
 white =
   Attr Tb._WHITE 0
 
--- | Bold.
+-- | Bold modifier attribute.
 bold :: Attr
 bold =
   Attr Tb._DEFAULT Tb._BOLD
 
--- | Underline.
+-- | Underline modifier attribute.
 underline :: Attr
 underline =
   Attr Tb._DEFAULT Tb._UNDERLINE
 
--- | Reverse.
+-- | Reverse modifier attribute.
 reverse :: Attr
 reverse =
   Attr Tb._DEFAULT Tb._REVERSE
