@@ -25,6 +25,7 @@ extra-source-files:
   cbits/LICENSE
   CHANGELOG.md
   include/termbox.h
+  README.md
 
 library
   build-depends:
