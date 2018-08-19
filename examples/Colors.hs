@@ -10,8 +10,6 @@ import qualified Termbox as Tb
 main :: IO ()
 main = do
   Tb.main $ do
-    clear
-
     do
       let
         rectangles :: [(Int, Int, Int, Int)]
@@ -85,15 +83,34 @@ main = do
     Tb.flush
     _ <- Tb.poll
 
+    clear
+    Tb.setOutputMode Tb.OutputMode256
+
+    do
+      let
+        rectangles :: [(Int, Int, Int, Int)]
+        rectangles = do
+          y0 <- [0, 2..]
+          x0 <- [0, 4 .. 48]
+          pure (x0, y0, x0+3, y0+1)
+
+      zipWithM_
+        (\(x0, y0, x1, y1) n -> do
+          rectangle x0 y0 x1 y1 (Tb.Cell ' ' mempty (fromInteger n))
+          string x0 y0 2 (fromInteger n) (show n))
+        rectangles
+        [1..255]
+
+    Tb.flush
+    _ <- Tb.poll
+
     pure ()
 
 clear :: IO ()
 clear = do
-  mode <- Tb.getOutputMode
   Tb.setOutputMode Tb.OutputModeNormal
   Tb.clear mempty mempty
   Tb.flush
-  Tb.setOutputMode mode
 
 string :: Int -> Int -> Tb.Attr -> Tb.Attr -> [Char] -> IO ()
 string x0 y fg bg cs =
