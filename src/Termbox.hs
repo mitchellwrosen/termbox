@@ -6,31 +6,74 @@
 {-# language TypeFamilies        #-}
 {-# language UnicodeSyntax       #-}
 
+-- |
+-- A @termbox@ program is typically constructed as an infinite loop that:
+--
+-- 1. 'clear's the terminal backbuffer.
+-- 2. Renders the program state by 'set'ting individual pixels.
+-- 3. 'flush'es the backbuffer to the terminal.
+-- 4. 'poll's for an event to update the program state.
+--
+-- For example, this progam simply displays the number of keys pressed, and
+-- quits on @Esc@:
+--
+-- @
+-- {-\# LANGUAGE LambdaCase \#-}
+--
+-- import Data.Foldable (for_)
+-- import qualified Termbox
+--
+-- main :: IO ()
+-- main =
+--   Termbox.'run_' (loop 0)
+--
+-- loop :: Int -> IO ()
+-- loop n = do
+--   Termbox.'clear' mempty mempty
+--   render n
+--   Termbox.'flush'
+--
+--   Termbox.'poll' >>= \\case
+--     Termbox.'EventKey' Termbox.'KeyEsc' _ ->
+--       pure ()
+--     _ ->
+--       loop (n+1)
+--
+-- render :: Int -> IO ()
+-- render n =
+--   for_
+--     (zip [0..] (show n))
+--     (\\(i, c) ->
+--       Termbox.'set' i 0 (Termbox.'Cell' c mempty mempty))
+-- @
+--
+-- Other termbox features include cell attributes (style, color), cursor
+-- display, and mouse click handling.
+--
+-- This module is intended to be imported qualified.
 module Termbox
-  ( -- $intro
-
-    -- * Initialization
-    main
+  ( -- * Initialization
+    run
+  , run_
   , InitError(..)
     -- * Terminal contents
-  , Cell(..)
   , set
-  , buffer
+  , getCells
   , clear
   , flush
+  , Cell(..)
     -- * Terminal size
-  , size
+  , getSize
     -- * Cursor manipulation
   , setCursor
   , hideCursor
     -- * Event handling
+  , poll
   , Event(..)
   , Key(..)
   , Mouse(..)
-  , poll
   , PollError(..)
     -- * Attributes
-  , Attr
   , black
   , red
   , green
@@ -42,14 +85,15 @@ module Termbox
   , bold
   , underline
   , reverse
+  , Attr
     -- * Terminal modes
-  , InputMode(..)
-  , MouseMode(..)
   , getInputMode
   , setInputMode
-  , OutputMode(..)
+  , InputMode(..)
+  , MouseMode(..)
   , getOutputMode
   , setOutputMode
+  , OutputMode(..)
   ) where
 
 import Prelude hiding (mod, reverse)
@@ -57,8 +101,8 @@ import Prelude hiding (mod, reverse)
 import qualified Termbox.Internal as Tb
 
 import Control.Exception
-import Control.Monad (join)
-import Data.Array.Storable
+import Control.Monad ((>=>), join)
+import Data.Array (Array)
 import Data.Bits ((.|.), (.&.))
 import Data.Functor (void)
 import Data.Semigroup (Semigroup(..))
@@ -66,21 +110,16 @@ import Data.Word
 import Foreign (ForeignPtr, Ptr, newForeignPtr_)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable
+import GHC.Stack
 
+import qualified Data.Array.Storable as Array (freeze)
 import qualified Data.Array.Storable.Internals as Array
-
--- $intro
--- This module is intended to be imported qualified.
---
--- @
--- import qualified Termbox
--- @
 
 --------------------------------------------------------------------------------
 -- Initialization
 --------------------------------------------------------------------------------
 
--- | Initialization errors that can be thrown by 'main'.
+-- | Termbox initialization errors that can be returned by 'run'.
 data InitError
   = FailedToOpenTTY
   | PipeTrapError
@@ -89,33 +128,42 @@ data InitError
 
 instance Exception InitError
 
--- | Run a @termbox@ program and restore the terminal state afterwards. May
--- throw an 'InitError' exception.
-main :: IO a -> IO a
-main =
-  bracket_
-    (Tb.init >>= \case
-      Tb.InitOk -> pure ()
-      Tb.FailedToOpenTTY -> throwIO FailedToOpenTTY
-      Tb.PipeTrapError -> throwIO PipeTrapError
-      Tb.UnsupportedTerminal -> throwIO UnsupportedTerminal)
-    Tb.shutdown
+-- | Run a @termbox@ program and restore the terminal state afterwards.
+run :: IO a -> IO (Either InitError a)
+run action =
+  mask $ \unmask ->
+    Tb.init >>= \case
+      Tb.InitOk -> do
+        result <- unmask action `onException` Tb.shutdown
+        Tb.shutdown
+        pure (Right result)
+
+      Tb.FailedToOpenTTY     -> pure (Left FailedToOpenTTY)
+      Tb.PipeTrapError       -> pure (Left PipeTrapError)
+      Tb.UnsupportedTerminal -> pure (Left UnsupportedTerminal)
+
+-- | Like 'run', but throws 'InitError's as @IO@ exceptions.
+run_ :: IO a -> IO a
+run_ =
+  run >=> either throwIO pure
+
 
 --------------------------------------------------------------------------------
 -- Terminal size
 --------------------------------------------------------------------------------
 
--- | Get the terminal width and height.
-size :: (width ~ Int, height ~ Int) => IO (width, height)
-size =
+-- | Get the terminal size (width, then height).
+getSize :: IO (Int, Int)
+getSize =
   (,) <$> Tb.width <*> Tb.height
+
 
 --------------------------------------------------------------------------------
 -- Cursor
 --------------------------------------------------------------------------------
 
--- | Set the cursor coordinates.
-setCursor :: (col ~ Int, row ~ Int) => col -> row -> IO ()
+-- | Set the cursor coordinates (column, then row).
+setCursor :: Int -> Int -> IO ()
 setCursor =
   Tb.setCursor
 
@@ -123,6 +171,7 @@ setCursor =
 hideCursor :: IO ()
 hideCursor =
   Tb.setCursor Tb._HIDE_CURSOR Tb._HIDE_CURSOR
+
 
 --------------------------------------------------------------------------------
 -- Terminal contents
@@ -161,34 +210,32 @@ instance Storable Cell where
     Tb.setCellFg ptr (attrToWord fg)
     Tb.setCellBg ptr (attrToWord bg)
 
--- | Set the 'Cell' at the given coordinates.
-set :: (col ~ Int, row ~ Int) => col -> row -> Cell -> IO ()
+-- | Set the cell at the given coordinates (column, then row).
+set :: Int -> Int -> Cell -> IO ()
 set x y (Cell ch fg bg) =
   Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
--- | Get the terminal's internal back buffer as a two-dimensional array of
--- 'Cell's indexed by their coordinates.
---
--- /Warning/: the data is only valid until the next call to 'clear' or
--- 'flush'.
-buffer :: (row ~ Int, col ~ Int) => IO (StorableArray (row, col) Cell)
-buffer =
+-- | Get the terminal's two-dimensional array of cells (indexed by row, then
+-- column).
+getCells :: IO (Array (Int, Int) Cell)
+getCells =
   join
     (mkbuffer
       <$> (tb_cell_buffer >>= newForeignPtr_)
       <*> Tb.width
       <*> Tb.height)
- where
-  mkbuffer
-    :: ForeignPtr Cell
-    -> Int
-    -> Int
-    -> IO (StorableArray (Int, Int) Cell)
-  mkbuffer buff w h =
-    Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h-1, w-1))
+  where
+    mkbuffer
+      :: ForeignPtr Cell
+      -> Int
+      -> Int
+      -> IO (Array (Int, Int) Cell)
+    mkbuffer buff w h =
+      Array.freeze =<<
+        Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h-1, w-1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
-clear :: (fg ~ Attr, bg ~ Attr) => fg -> bg -> IO ()
+clear :: Attr -> Attr -> IO ()
 clear fg bg = do
   Tb.setClearAttributes (attrToWord fg) (attrToWord bg)
   Tb.clear
@@ -225,29 +272,29 @@ data MouseMode
   deriving (Eq, Ord, Show)
 
 -- | Get the current input mode.
-getInputMode :: IO InputMode
+getInputMode :: HasCallStack => IO InputMode
 getInputMode =
   f <$> Tb.selectInputMode Tb._INPUT_CURRENT
- where
-  f :: Int -> InputMode
-  f = \case
-    1 -> InputModeEsc MouseModeNo
-    2 -> InputModeAlt MouseModeNo
-    5 -> InputModeEsc MouseModeYes
-    6 -> InputModeAlt MouseModeYes
-    n -> error ("getInputMode: " ++ show n)
+  where
+    f :: Int -> InputMode
+    f = \case
+      1 -> InputModeEsc MouseModeNo
+      2 -> InputModeAlt MouseModeNo
+      5 -> InputModeEsc MouseModeYes
+      6 -> InputModeAlt MouseModeYes
+      n -> error (show n)
 
 -- | Set the input mode.
 setInputMode :: InputMode -> IO ()
 setInputMode =
   void . Tb.selectInputMode . f
- where
-  f :: InputMode -> Int
-  f = \case
-    InputModeEsc MouseModeNo -> Tb._INPUT_ESC
-    InputModeEsc MouseModeYes -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
-    InputModeAlt MouseModeNo -> Tb._INPUT_ALT
-    InputModeAlt MouseModeYes -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
+  where
+    f :: InputMode -> Int
+    f = \case
+      InputModeEsc MouseModeNo -> Tb._INPUT_ESC
+      InputModeEsc MouseModeYes -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
+      InputModeAlt MouseModeNo -> Tb._INPUT_ALT
+      InputModeAlt MouseModeYes -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
 
 -- | The output modes.
 --
@@ -267,29 +314,29 @@ data OutputMode
   deriving (Eq, Ord, Show)
 
 -- | Get the current output mode.
-getOutputMode :: IO OutputMode
+getOutputMode :: HasCallStack => IO OutputMode
 getOutputMode =
   f <$> Tb.selectOutputMode Tb.OutputModeCurrent
- where
-  f :: Tb.OutputMode -> OutputMode
-  f = \case
-    Tb.OutputModeNormal -> OutputModeNormal
-    Tb.OutputMode256 -> OutputMode256
-    Tb.OutputMode216 -> OutputMode216
-    Tb.OutputModeGrayscale -> OutputModeGrayscale
-    Tb.OutputModeCurrent -> error "getOutputMode: OutputModeCurrent"
+  where
+    f :: Tb.OutputMode -> OutputMode
+    f = \case
+      Tb.OutputModeNormal -> OutputModeNormal
+      Tb.OutputMode256 -> OutputMode256
+      Tb.OutputMode216 -> OutputMode216
+      Tb.OutputModeGrayscale -> OutputModeGrayscale
+      Tb.OutputModeCurrent -> error "OutputModeCurrent"
 
 -- | Set the output mode.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
   void . Tb.selectOutputMode . f
- where
-  f :: OutputMode -> Tb.OutputMode
-  f = \case
-    OutputModeNormal -> Tb.OutputModeNormal
-    OutputMode256 -> Tb.OutputMode256
-    OutputMode216 -> Tb.OutputMode216
-    OutputModeGrayscale -> Tb.OutputModeGrayscale
+  where
+    f :: OutputMode -> Tb.OutputMode
+    f = \case
+      OutputModeNormal -> Tb.OutputModeNormal
+      OutputMode256 -> Tb.OutputMode256
+      OutputMode216 -> Tb.OutputMode216
+      OutputModeGrayscale -> Tb.OutputModeGrayscale
 
 --------------------------------------------------------------------------------
 -- Event handling
@@ -394,8 +441,7 @@ data Mouse
 -- @threaded@ runtime, or simply writing event-handling code that is responsive
 -- to intuitive "quit" keys like @q@ and @Esc@.
 --
--- This function may throw a 'PollError' exception under mysterious
--- circumstances that are not well-documented in the original C codebase.
+-- /Throws/: 'PollError'
 poll :: IO Event
 poll =
   alloca $ \ptr ->
@@ -405,7 +451,8 @@ poll =
       _ ->
         parseEvent <$> peek ptr
 
--- | An error occurred when 'poll'ing.
+-- | An error occurred when 'poll'ing, due to mysterious circumstances that are
+-- not well-documented in the original C codebase.
 data PollError
   = PollError
   deriving Show
@@ -426,21 +473,21 @@ parseEvent = \case
 parseEventKey :: Tb.Mod -> Tb.Key -> Char -> Event
 parseEventKey mod key ch =
   EventKey key' alt
- where
-  key' :: Key
-  key' =
-    case ch of
-      '\0' -> parseKey key
-      _ -> KeyChar ch
+  where
+    key' :: Key
+    key' =
+      case ch of
+        '\0' -> parseKey key
+        _ -> KeyChar ch
 
-  alt :: Bool
-  alt =
-    case mod of
-      Tb.ModAlt -> True
-      _ -> False
+    alt :: Bool
+    alt =
+      case mod of
+        Tb.ModAlt -> True
+        _ -> False
 
 -- | Parse a 'Key' from a 'Tb.Key'.
-parseKey :: Tb.Key -> Key
+parseKey :: HasCallStack => Tb.Key -> Key
 parseKey = \case
   Tb.KeyArrowDown -> KeyArrowDown
   Tb.KeyArrowLeft -> KeyArrowLeft
@@ -509,10 +556,10 @@ parseKey = \case
   Tb.KeyPageUp -> KeyPageUp
   Tb.KeySpace -> KeySpace
   Tb.KeyTab -> KeyTab
-  key -> error ("parseKey: " ++ show key)
+  key -> error (show key)
 
 -- | Parse a 'Mouse' from a 'Tb.Key'.
-parseMouse :: Tb.Key -> Mouse
+parseMouse :: HasCallStack => Tb.Key -> Mouse
 parseMouse = \case
   Tb.KeyMouseLeft -> MouseLeft
   Tb.KeyMouseMiddle -> MouseMiddle
@@ -520,7 +567,7 @@ parseMouse = \case
   Tb.KeyMouseRight -> MouseRight
   Tb.KeyMouseWheelDown -> MouseWheelDown
   Tb.KeyMouseWheelUp -> MouseWheelUp
-  key -> error ("parseMouse: " ++ show key)
+  key -> error (show key)
 
 --------------------------------------------------------------------------------
 -- Attributes
@@ -530,15 +577,8 @@ parseMouse = \case
 -- bold, underlined, and/or reversed.
 --
 -- A cell can only have one color, but may be (for example) bold /and/
--- underlined. The 'Monoid' instance combines 'Attr's this way, with a left
--- bias. That is,
---
--- @
--- red <> bold <> black <> underline = red <> bold <> underline
--- @
---
--- /Warning/: the 'Num' instance is /very partial/! It only includes an
--- implementation of 'fromInteger', for numeric literals.
+-- underlined. The 'Monoid' instance combines 'Attr's this way, with a right
+-- bias.
 data Attr
   = Attr !Word16 {- color -} !Word16 {- attr -}
   deriving (Eq)
@@ -552,27 +592,24 @@ instance Monoid Attr where
   mappend =
     (<>)
 
--- | Only 'fromInteger' is defined.
+-- | Provided for numeric literals.
 instance Num Attr where
   fromInteger :: Integer -> Attr
-  fromInteger n
-    | n >= 0 && n < 256 =
-        Attr (fromIntegral n) 0
-    | otherwise =
-        error ("Attr.fromInteger: " ++ show n ++ " out of range [0..255]")
+  fromInteger n =
+    Attr (fromIntegral (n `rem` 256)) 0
 
-  (+) = error "Attr.(+): not defined"
-  (*) = error "Attr.(*): not defined"
-  (-) = error "Attr.(-): not defined"
-  abs = error "Attr.abs: not defined"
-  signum = error "Attr.signum: not defined"
+  (+) = (<>)
+  (*) = (<>)
+  (-) = (<>)
+  abs = id
+  signum = id
 
 -- | Left-biased color; attributes are merged.
 instance Semigroup Attr where
   (<>) :: Attr -> Attr -> Attr
   Attr  0 ax <> Attr cy ay = Attr cy (ax .|. ay)
   Attr cx ax <> Attr  0 ay = Attr cx (ax .|. ay)
-  Attr cx ax <> Attr  _ ay = Attr cx (ax .|. ay)
+  Attr  _ ax <> Attr cy ay = Attr cy (ax .|. ay)
 
 wordToAttr :: Word16 -> Attr
 wordToAttr w =

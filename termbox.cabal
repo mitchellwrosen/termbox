@@ -1,8 +1,7 @@
 cabal-version: 2.4
 
 name: termbox
-version: 0.1.0
-x-revision: 1
+version: 0.2.0
 category: User Interfaces
 description:
   This package provides a thin wrapper around @termbox v1.1.2@, a simple C
@@ -16,7 +15,7 @@ maintainer: Mitchell Rosen <mitchellwrosen@gmail.com>
 homepage: https://github.com/mitchellwrosen/termbox
 bug-reports: https://github.com/mitchellwrosen/termbox/issues
 copyright: (c) 2018-2019, Mitchell Rosen
-license: BSD3
+license: BSD-3-Clause
 license-file: LICENSE
 build-type: Simple
 tested-with:
@@ -26,7 +25,7 @@ tested-with:
   , GHC == 8.6.5
 
 extra-source-files:
-  .hlint.yml
+  .hlint.yaml
   .travis.yml
   cbits/LICENSE
   CHANGELOG.md

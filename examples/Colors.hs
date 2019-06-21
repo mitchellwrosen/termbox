@@ -1,15 +1,13 @@
 -- | Something like https://github.com/nsf/termbox/blob/8b72969ff4bba120d8b8e4a29bae07102ed71055/src/demo/output.c
 
-
-
 import Control.Monad
 import Data.Foldable
 
 import qualified Termbox as Tb
 
-main :: IO ()
+main :: IO (Either Tb.InitError ())
 main =
-  Tb.main $ do
+  Tb.run $ do
     do
       let
         rectangles :: [(Int, Int, Int, Int)]
