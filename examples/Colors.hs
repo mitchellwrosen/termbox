@@ -1,6 +1,6 @@
 -- | Something like https://github.com/nsf/termbox/blob/8b72969ff4bba120d8b8e4a29bae07102ed71055/src/demo/output.c
 
-{-# language LambdaCase #-}
+
 
 import Control.Monad
 import Data.Foldable
@@ -8,7 +8,7 @@ import Data.Foldable
 import qualified Termbox as Tb
 
 main :: IO ()
-main = do
+main =
   Tb.main $ do
     do
       let
@@ -113,11 +113,10 @@ clear = do
   Tb.flush
 
 string :: Int -> Int -> Tb.Attr -> Tb.Attr -> [Char] -> IO ()
-string x0 y fg bg cs =
+string x0 y fg bg =
   zipWithM_
     (\x c -> Tb.set x y (Tb.Cell c fg bg))
     [x0..]
-    cs
 
 rectangle :: Int -> Int -> Int -> Int -> Tb.Cell -> IO ()
 rectangle x0 y0 x1 y1 c =

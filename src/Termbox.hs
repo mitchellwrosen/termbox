@@ -1,7 +1,7 @@
 {-# language InstanceSigs        #-}
 {-# language LambdaCase          #-}
 {-# language RankNTypes          #-}
-{-# language RecordWildCards     #-}
+
 {-# language ScopedTypeVariables #-}
 {-# language TypeFamilies        #-}
 {-# language UnicodeSyntax       #-}
@@ -561,11 +561,11 @@ instance Num Attr where
     | otherwise =
         error ("Attr.fromInteger: " ++ show n ++ " out of range [0..255]")
 
-  (+) = error ("Attr.(+): not defined")
-  (*) = error ("Attr.(*): not defined")
-  (-) = error ("Attr.(-): not defined")
-  abs = error ("Attr.abs: not defined")
-  signum = error ("Attr.signum: not defined")
+  (+) = error "Attr.(+): not defined"
+  (*) = error "Attr.(*): not defined"
+  (-) = error "Attr.(-): not defined"
+  abs = error "Attr.abs: not defined"
+  signum = error "Attr.signum: not defined"
 
 -- | Left-biased color; attributes are merged.
 instance Semigroup Attr where
