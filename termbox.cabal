@@ -63,7 +63,7 @@ library
   include-dirs:
     include
   other-modules:
-    Termbox.Internal
+    Termbox.C
 
 executable termbox-example-colors
   if !flag(build-examples)

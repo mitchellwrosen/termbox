@@ -4,7 +4,7 @@
 
 {-# language InstanceSigs #-}
 
-module Termbox.Internal where
+module Termbox.C where
 
 #include <termbox.h>
 

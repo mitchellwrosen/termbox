@@ -115,7 +115,7 @@ import Foreign (ForeignPtr, Ptr, newForeignPtr_)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable
 import GHC.Stack
-import qualified Termbox.Internal as Tb
+import qualified Termbox.C
 import Prelude hiding (mod, reverse)
 
 --------------------------------------------------------------------------------
@@ -135,14 +135,14 @@ instance Exception InitError
 run :: IO a -> IO (Either InitError a)
 run action =
   mask $ \unmask ->
-    Tb.init >>= \case
-      Tb.InitOk -> do
-        result <- unmask action `onException` Tb.shutdown
-        Tb.shutdown
+    Termbox.C.init >>= \case
+      Termbox.C.InitOk -> do
+        result <- unmask action `onException` Termbox.C.shutdown
+        Termbox.C.shutdown
         pure (Right result)
-      Tb.FailedToOpenTTY -> pure (Left FailedToOpenTTY)
-      Tb.PipeTrapError -> pure (Left PipeTrapError)
-      Tb.UnsupportedTerminal -> pure (Left UnsupportedTerminal)
+      Termbox.C.FailedToOpenTTY -> pure (Left FailedToOpenTTY)
+      Termbox.C.PipeTrapError -> pure (Left PipeTrapError)
+      Termbox.C.UnsupportedTerminal -> pure (Left UnsupportedTerminal)
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
 run_ :: IO a -> IO a
@@ -156,7 +156,7 @@ run_ =
 -- | Get the terminal size (width, then height).
 getSize :: IO (Int, Int)
 getSize =
-  (,) <$> Tb.width <*> Tb.height
+  (,) <$> Termbox.C.width <*> Termbox.C.height
 
 --------------------------------------------------------------------------------
 -- Cursor
@@ -165,12 +165,12 @@ getSize =
 -- | Set the cursor coordinates (column, then row).
 setCursor :: Int -> Int -> IO ()
 setCursor =
-  Tb.setCursor
+  Termbox.C.setCursor
 
 -- | Hide the cursor.
 hideCursor :: IO ()
 hideCursor =
-  Tb.setCursor Tb._HIDE_CURSOR Tb._HIDE_CURSOR
+  Termbox.C.setCursor Termbox.C._HIDE_CURSOR Termbox.C._HIDE_CURSOR
 
 --------------------------------------------------------------------------------
 -- Terminal contents
@@ -190,29 +190,29 @@ instance Show Cell where
 instance Storable Cell where
   sizeOf :: Cell -> Int
   sizeOf _ =
-    Tb.sizeofCell
+    Termbox.C.sizeofCell
 
   alignment :: Cell -> Int
   alignment _ =
-    Tb.alignofCell
+    Termbox.C.alignofCell
 
   peek :: Ptr Cell -> IO Cell
   peek ptr =
     Cell
-      <$> Tb.getCellCh ptr
-      <*> (wordToAttr <$> Tb.getCellFg ptr)
-      <*> (wordToAttr <$> Tb.getCellBg ptr)
+      <$> Termbox.C.getCellCh ptr
+      <*> (wordToAttr <$> Termbox.C.getCellFg ptr)
+      <*> (wordToAttr <$> Termbox.C.getCellBg ptr)
 
   poke :: Ptr Cell -> Cell -> IO ()
   poke ptr (Cell ch fg bg) = do
-    Tb.setCellCh ptr ch
-    Tb.setCellFg ptr (attrToWord fg)
-    Tb.setCellBg ptr (attrToWord bg)
+    Termbox.C.setCellCh ptr ch
+    Termbox.C.setCellFg ptr (attrToWord fg)
+    Termbox.C.setCellBg ptr (attrToWord bg)
 
 -- | Set the cell at the given coordinates (column, then row).
 set :: Int -> Int -> Cell -> IO ()
 set x y (Cell ch fg bg) =
-  Tb.changeCell x y ch (attrToWord fg) (attrToWord bg)
+  Termbox.C.changeCell x y ch (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's two-dimensional array of cells (indexed by row, then
 -- column).
@@ -221,8 +221,8 @@ getCells =
   join
     ( mkbuffer
         <$> (tb_cell_buffer >>= newForeignPtr_)
-        <*> Tb.width
-        <*> Tb.height
+        <*> Termbox.C.width
+        <*> Termbox.C.height
     )
   where
     mkbuffer ::
@@ -237,13 +237,13 @@ getCells =
 -- | Clear the back buffer with the given foreground and background attributes.
 clear :: Attr -> Attr -> IO ()
 clear fg bg = do
-  Tb.setClearAttributes (attrToWord fg) (attrToWord bg)
-  Tb.clear
+  Termbox.C.setClearAttributes (attrToWord fg) (attrToWord bg)
+  Termbox.C.clear
 
 -- | Synchronize the internal back buffer with the terminal.
 flush :: IO ()
 flush =
-  Tb.present
+  Termbox.C.present
 
 --------------------------------------------------------------------------------
 -- Terminal mode
@@ -276,7 +276,7 @@ data MouseMode
 -- | Get the current input mode.
 getInputMode :: HasCallStack => IO InputMode
 getInputMode =
-  f <$> Tb.selectInputMode Tb._INPUT_CURRENT
+  f <$> Termbox.C.selectInputMode Termbox.C._INPUT_CURRENT
   where
     f :: Int -> InputMode
     f = \case
@@ -289,14 +289,14 @@ getInputMode =
 -- | Set the input mode.
 setInputMode :: InputMode -> IO ()
 setInputMode =
-  void . Tb.selectInputMode . f
+  void . Termbox.C.selectInputMode . f
   where
     f :: InputMode -> Int
     f = \case
-      InputModeEsc MouseModeNo -> Tb._INPUT_ESC
-      InputModeEsc MouseModeYes -> Tb._INPUT_ESC .|. Tb._INPUT_MOUSE
-      InputModeAlt MouseModeNo -> Tb._INPUT_ALT
-      InputModeAlt MouseModeYes -> Tb._INPUT_ALT .|. Tb._INPUT_MOUSE
+      InputModeEsc MouseModeNo -> Termbox.C._INPUT_ESC
+      InputModeEsc MouseModeYes -> Termbox.C._INPUT_ESC .|. Termbox.C._INPUT_MOUSE
+      InputModeAlt MouseModeNo -> Termbox.C._INPUT_ALT
+      InputModeAlt MouseModeYes -> Termbox.C._INPUT_ALT .|. Termbox.C._INPUT_MOUSE
 
 -- | The output modes.
 --
@@ -319,27 +319,27 @@ data OutputMode
 -- | Get the current output mode.
 getOutputMode :: HasCallStack => IO OutputMode
 getOutputMode =
-  f <$> Tb.selectOutputMode Tb.OutputModeCurrent
+  f <$> Termbox.C.selectOutputMode Termbox.C.OutputModeCurrent
   where
-    f :: Tb.OutputMode -> OutputMode
+    f :: Termbox.C.OutputMode -> OutputMode
     f = \case
-      Tb.OutputModeNormal -> OutputModeNormal
-      Tb.OutputMode256 -> OutputMode256
-      Tb.OutputMode216 -> OutputMode216
-      Tb.OutputModeGrayscale -> OutputModeGrayscale
-      Tb.OutputModeCurrent -> error "OutputModeCurrent"
+      Termbox.C.OutputModeNormal -> OutputModeNormal
+      Termbox.C.OutputMode256 -> OutputMode256
+      Termbox.C.OutputMode216 -> OutputMode216
+      Termbox.C.OutputModeGrayscale -> OutputModeGrayscale
+      Termbox.C.OutputModeCurrent -> error "OutputModeCurrent"
 
 -- | Set the output mode.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
-  void . Tb.selectOutputMode . f
+  void . Termbox.C.selectOutputMode . f
   where
-    f :: OutputMode -> Tb.OutputMode
+    f :: OutputMode -> Termbox.C.OutputMode
     f = \case
-      OutputModeNormal -> Tb.OutputModeNormal
-      OutputMode256 -> Tb.OutputMode256
-      OutputMode216 -> Tb.OutputMode216
-      OutputModeGrayscale -> Tb.OutputModeGrayscale
+      OutputModeNormal -> Termbox.C.OutputModeNormal
+      OutputMode256 -> Termbox.C.OutputMode256
+      OutputMode216 -> Termbox.C.OutputMode216
+      OutputModeGrayscale -> Termbox.C.OutputModeGrayscale
 
 --------------------------------------------------------------------------------
 -- Event handling
@@ -451,7 +451,7 @@ data Mouse
 poll :: IO Event
 poll =
   alloca $ \ptr ->
-    Tb.pollEvent ptr >>= \case
+    Termbox.C.pollEvent ptr >>= \case
       -1 ->
         throwIO PollError
       _ ->
@@ -466,17 +466,17 @@ data PollError
 instance Exception PollError
 
 -- | Parse an 'Event' from a 'Tb.Event'.
-parseEvent :: Tb.Event -> Event
+parseEvent :: Termbox.C.Event -> Event
 parseEvent = \case
-  Tb.Event Tb.EventKey mod key ch _ _ _ _ ->
+  Termbox.C.Event Termbox.C.EventKey mod key ch _ _ _ _ ->
     parseEventKey mod key ch
-  Tb.Event Tb.EventResize _ _ _ w h _ _ ->
+  Termbox.C.Event Termbox.C.EventResize _ _ _ w h _ _ ->
     EventResize w h
-  Tb.Event Tb.EventMouse _ key _ _ _ x y ->
+  Termbox.C.Event Termbox.C.EventMouse _ key _ _ _ x y ->
     EventMouse (parseMouse key) x y
 
 -- | Parse a key 'Event'.
-parseEventKey :: Tb.Mod -> Tb.Key -> Char -> Event
+parseEventKey :: Termbox.C.Mod -> Termbox.C.Key -> Char -> Event
 parseEventKey mod key ch =
   EventKey key' alt
   where
@@ -488,90 +488,90 @@ parseEventKey mod key ch =
     alt :: Bool
     alt =
       case mod of
-        Tb.ModAlt -> True
+        Termbox.C.ModAlt -> True
         _ -> False
 
 -- | Parse a 'Key' from a 'Tb.Key'.
-parseKey :: HasCallStack => Tb.Key -> Key
+parseKey :: HasCallStack => Termbox.C.Key -> Key
 parseKey = \case
-  Tb.KeyArrowDown -> KeyArrowDown
-  Tb.KeyArrowLeft -> KeyArrowLeft
-  Tb.KeyArrowRight -> KeyArrowRight
-  Tb.KeyArrowUp -> KeyArrowUp
-  Tb.KeyBackspace -> KeyBackspace
-  Tb.KeyBackspace2 -> KeyBackspace2
-  Tb.KeyCtrl2 -> KeyCtrl2
-  Tb.KeyCtrl3 -> KeyCtrl3
-  Tb.KeyCtrl4 -> KeyCtrl4
-  Tb.KeyCtrl5 -> KeyCtrl5
-  Tb.KeyCtrl6 -> KeyCtrl6
-  Tb.KeyCtrl7 -> KeyCtrl7
-  Tb.KeyCtrl8 -> KeyCtrl8
-  Tb.KeyCtrlA -> KeyCtrlA
-  Tb.KeyCtrlB -> KeyCtrlB
-  Tb.KeyCtrlBackslash -> KeyCtrlBackslash
-  Tb.KeyCtrlC -> KeyCtrlC
-  Tb.KeyCtrlD -> KeyCtrlD
-  Tb.KeyCtrlE -> KeyCtrlE
-  Tb.KeyCtrlF -> KeyCtrlF
-  Tb.KeyCtrlG -> KeyCtrlG
-  Tb.KeyCtrlH -> KeyCtrlH
-  Tb.KeyCtrlI -> KeyCtrlI
-  Tb.KeyCtrlJ -> KeyCtrlJ
-  Tb.KeyCtrlK -> KeyCtrlK
-  Tb.KeyCtrlL -> KeyCtrlL
-  Tb.KeyCtrlLsqBracket -> KeyCtrlLsqBracket
-  Tb.KeyCtrlM -> KeyCtrlM
-  Tb.KeyCtrlN -> KeyCtrlN
-  Tb.KeyCtrlO -> KeyCtrlO
-  Tb.KeyCtrlP -> KeyCtrlP
-  Tb.KeyCtrlQ -> KeyCtrlQ
-  Tb.KeyCtrlR -> KeyCtrlR
-  Tb.KeyCtrlRsqBracket -> KeyCtrlRsqBracket
-  Tb.KeyCtrlS -> KeyCtrlS
-  Tb.KeyCtrlSlash -> KeyCtrlSlash
-  Tb.KeyCtrlT -> KeyCtrlT
-  Tb.KeyCtrlTilde -> KeyCtrlTilde
-  Tb.KeyCtrlU -> KeyCtrlU
-  Tb.KeyCtrlUnderscore -> KeyCtrlUnderscore
-  Tb.KeyCtrlV -> KeyCtrlV
-  Tb.KeyCtrlW -> KeyCtrlW
-  Tb.KeyCtrlX -> KeyCtrlX
-  Tb.KeyCtrlY -> KeyCtrlY
-  Tb.KeyCtrlZ -> KeyCtrlZ
-  Tb.KeyDelete -> KeyDelete
-  Tb.KeyEnd -> KeyEnd
-  Tb.KeyEnter -> KeyEnter
-  Tb.KeyEsc -> KeyEsc
-  Tb.KeyF1 -> KeyF1
-  Tb.KeyF10 -> KeyF10
-  Tb.KeyF11 -> KeyF11
-  Tb.KeyF12 -> KeyF12
-  Tb.KeyF2 -> KeyF2
-  Tb.KeyF3 -> KeyF3
-  Tb.KeyF4 -> KeyF4
-  Tb.KeyF5 -> KeyF5
-  Tb.KeyF6 -> KeyF6
-  Tb.KeyF7 -> KeyF7
-  Tb.KeyF8 -> KeyF8
-  Tb.KeyF9 -> KeyF9
-  Tb.KeyHome -> KeyHome
-  Tb.KeyInsert -> KeyInsert
-  Tb.KeyPageDn -> KeyPageDn
-  Tb.KeyPageUp -> KeyPageUp
-  Tb.KeySpace -> KeySpace
-  Tb.KeyTab -> KeyTab
+  Termbox.C.KeyArrowDown -> KeyArrowDown
+  Termbox.C.KeyArrowLeft -> KeyArrowLeft
+  Termbox.C.KeyArrowRight -> KeyArrowRight
+  Termbox.C.KeyArrowUp -> KeyArrowUp
+  Termbox.C.KeyBackspace -> KeyBackspace
+  Termbox.C.KeyBackspace2 -> KeyBackspace2
+  Termbox.C.KeyCtrl2 -> KeyCtrl2
+  Termbox.C.KeyCtrl3 -> KeyCtrl3
+  Termbox.C.KeyCtrl4 -> KeyCtrl4
+  Termbox.C.KeyCtrl5 -> KeyCtrl5
+  Termbox.C.KeyCtrl6 -> KeyCtrl6
+  Termbox.C.KeyCtrl7 -> KeyCtrl7
+  Termbox.C.KeyCtrl8 -> KeyCtrl8
+  Termbox.C.KeyCtrlA -> KeyCtrlA
+  Termbox.C.KeyCtrlB -> KeyCtrlB
+  Termbox.C.KeyCtrlBackslash -> KeyCtrlBackslash
+  Termbox.C.KeyCtrlC -> KeyCtrlC
+  Termbox.C.KeyCtrlD -> KeyCtrlD
+  Termbox.C.KeyCtrlE -> KeyCtrlE
+  Termbox.C.KeyCtrlF -> KeyCtrlF
+  Termbox.C.KeyCtrlG -> KeyCtrlG
+  Termbox.C.KeyCtrlH -> KeyCtrlH
+  Termbox.C.KeyCtrlI -> KeyCtrlI
+  Termbox.C.KeyCtrlJ -> KeyCtrlJ
+  Termbox.C.KeyCtrlK -> KeyCtrlK
+  Termbox.C.KeyCtrlL -> KeyCtrlL
+  Termbox.C.KeyCtrlLsqBracket -> KeyCtrlLsqBracket
+  Termbox.C.KeyCtrlM -> KeyCtrlM
+  Termbox.C.KeyCtrlN -> KeyCtrlN
+  Termbox.C.KeyCtrlO -> KeyCtrlO
+  Termbox.C.KeyCtrlP -> KeyCtrlP
+  Termbox.C.KeyCtrlQ -> KeyCtrlQ
+  Termbox.C.KeyCtrlR -> KeyCtrlR
+  Termbox.C.KeyCtrlRsqBracket -> KeyCtrlRsqBracket
+  Termbox.C.KeyCtrlS -> KeyCtrlS
+  Termbox.C.KeyCtrlSlash -> KeyCtrlSlash
+  Termbox.C.KeyCtrlT -> KeyCtrlT
+  Termbox.C.KeyCtrlTilde -> KeyCtrlTilde
+  Termbox.C.KeyCtrlU -> KeyCtrlU
+  Termbox.C.KeyCtrlUnderscore -> KeyCtrlUnderscore
+  Termbox.C.KeyCtrlV -> KeyCtrlV
+  Termbox.C.KeyCtrlW -> KeyCtrlW
+  Termbox.C.KeyCtrlX -> KeyCtrlX
+  Termbox.C.KeyCtrlY -> KeyCtrlY
+  Termbox.C.KeyCtrlZ -> KeyCtrlZ
+  Termbox.C.KeyDelete -> KeyDelete
+  Termbox.C.KeyEnd -> KeyEnd
+  Termbox.C.KeyEnter -> KeyEnter
+  Termbox.C.KeyEsc -> KeyEsc
+  Termbox.C.KeyF1 -> KeyF1
+  Termbox.C.KeyF10 -> KeyF10
+  Termbox.C.KeyF11 -> KeyF11
+  Termbox.C.KeyF12 -> KeyF12
+  Termbox.C.KeyF2 -> KeyF2
+  Termbox.C.KeyF3 -> KeyF3
+  Termbox.C.KeyF4 -> KeyF4
+  Termbox.C.KeyF5 -> KeyF5
+  Termbox.C.KeyF6 -> KeyF6
+  Termbox.C.KeyF7 -> KeyF7
+  Termbox.C.KeyF8 -> KeyF8
+  Termbox.C.KeyF9 -> KeyF9
+  Termbox.C.KeyHome -> KeyHome
+  Termbox.C.KeyInsert -> KeyInsert
+  Termbox.C.KeyPageDn -> KeyPageDn
+  Termbox.C.KeyPageUp -> KeyPageUp
+  Termbox.C.KeySpace -> KeySpace
+  Termbox.C.KeyTab -> KeyTab
   key -> error (show key)
 
 -- | Parse a 'Mouse' from a 'Tb.Key'.
-parseMouse :: HasCallStack => Tb.Key -> Mouse
+parseMouse :: HasCallStack => Termbox.C.Key -> Mouse
 parseMouse = \case
-  Tb.KeyMouseLeft -> MouseLeft
-  Tb.KeyMouseMiddle -> MouseMiddle
-  Tb.KeyMouseRelease -> MouseRelease
-  Tb.KeyMouseRight -> MouseRight
-  Tb.KeyMouseWheelDown -> MouseWheelDown
-  Tb.KeyMouseWheelUp -> MouseWheelUp
+  Termbox.C.KeyMouseLeft -> MouseLeft
+  Termbox.C.KeyMouseMiddle -> MouseMiddle
+  Termbox.C.KeyMouseRelease -> MouseRelease
+  Termbox.C.KeyMouseRight -> MouseRight
+  Termbox.C.KeyMouseWheelDown -> MouseWheelDown
+  Termbox.C.KeyMouseWheelUp -> MouseWheelUp
   key -> error (show key)
 
 --------------------------------------------------------------------------------
@@ -591,7 +591,7 @@ data Attr
 instance Monoid Attr where
   mempty :: Attr
   mempty =
-    Attr Tb._DEFAULT 0
+    Attr Termbox.C._DEFAULT 0
 
   mappend :: Attr -> Attr -> Attr
   mappend =
@@ -627,57 +627,57 @@ attrToWord (Attr x y) =
 -- | @black = 1@.
 black :: Attr
 black =
-  Attr Tb._BLACK 0
+  Attr Termbox.C._BLACK 0
 
 -- | @red = 2@.
 red :: Attr
 red =
-  Attr Tb._RED 0
+  Attr Termbox.C._RED 0
 
 -- | @green = 3@.
 green :: Attr
 green =
-  Attr Tb._GREEN 0
+  Attr Termbox.C._GREEN 0
 
 -- | @yellow = 4@.
 yellow :: Attr
 yellow =
-  Attr Tb._YELLOW 0
+  Attr Termbox.C._YELLOW 0
 
 -- | @blue = 5@.
 blue :: Attr
 blue =
-  Attr Tb._BLUE 0
+  Attr Termbox.C._BLUE 0
 
 -- | @magenta = 6@.
 magenta :: Attr
 magenta =
-  Attr Tb._MAGENTA 0
+  Attr Termbox.C._MAGENTA 0
 
 -- | @cyan = 7@.
 cyan :: Attr
 cyan =
-  Attr Tb._CYAN 0
+  Attr Termbox.C._CYAN 0
 
 -- | @white = 8@.
 white :: Attr
 white =
-  Attr Tb._WHITE 0
+  Attr Termbox.C._WHITE 0
 
 -- | Bold modifier attribute.
 bold :: Attr
 bold =
-  Attr Tb._DEFAULT Tb._BOLD
+  Attr Termbox.C._DEFAULT Termbox.C._BOLD
 
 -- | Underline modifier attribute.
 underline :: Attr
 underline =
-  Attr Tb._DEFAULT Tb._UNDERLINE
+  Attr Termbox.C._DEFAULT Termbox.C._UNDERLINE
 
 -- | Reverse modifier attribute.
 reverse :: Attr
 reverse =
-  Attr Tb._DEFAULT Tb._REVERSE
+  Attr Termbox.C._DEFAULT Termbox.C._REVERSE
 
 --------------------------------------------------------------------------------
 -- Foreign imports
