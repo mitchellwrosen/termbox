@@ -33,19 +33,11 @@ flag build-examples
   default: False
   manual: True
 
-library
-  build-depends:
-    array,
-    base ^>= 4.9 || ^>= 4.10 || ^>= 4.11 || ^>= 4.12 || ^>= 4.13 || ^>= 4.14
-  build-tool-depends:
-    c2hs:c2hs
-  c-sources:
-    cbits/termbox.c
-    cbits/utf8.c
-  default-language:
-    Haskell2010
-  exposed-modules:
-    Termbox
+common component
+  default-extensions:
+    InstanceSigs
+    LambdaCase
+  default-language: Haskell2010
   ghc-options:
     -Weverything
     -Wno-implicit-prelude
@@ -58,12 +50,30 @@ library
     ghc-options:
       -Wno-missing-safe-haskell-mode
       -Wno-prepositive-qualified-module
-  hs-source-dirs:
-    src
-  include-dirs:
-    include
+
+library
+  import: component
+  build-depends:
+    array,
+    base ^>= 4.9 || ^>= 4.10 || ^>= 4.11 || ^>= 4.12 || ^>= 4.13 || ^>= 4.14
+  build-tool-depends: c2hs:c2hs
+  c-sources:
+    cbits/termbox.c
+    cbits/utf8.c
+  exposed-modules:
+    Termbox
+  hs-source-dirs: src
+  include-dirs: include
   other-modules:
+    Termbox.Attr
     Termbox.C
+    Termbox.Cell
+    Termbox.Event
+    Termbox.InputMode
+    Termbox.Key
+    Termbox.Mouse
+    Termbox.MouseMode
+    Termbox.OutputMode
 
 executable termbox-example-colors
   if !flag(build-examples)
@@ -71,13 +81,8 @@ executable termbox-example-colors
   build-depends:
     base,
     termbox,
-  default-language:
-    Haskell2010
   ghc-options:
     -rtsopts
     -threaded
-    -Wall
-  hs-source-dirs:
-    examples
-  main-is:
-    Colors.hs
+  hs-source-dirs: examples
+  main-is: Colors.hs

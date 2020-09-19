@@ -158,7 +158,6 @@ _WHITE         = {# const TB_WHITE #}
     , TB_OUTPUT_216 as OutputMode216
     , TB_OUTPUT_GRAYSCALE as OutputModeGrayscale
     }
-
 #}
 
 --------------------------------------------------------------------------------

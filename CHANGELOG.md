@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to the [Haskell Package Versioning Policy](https://pvp.haskell.org/).
 
+## Unreleased
+
+### Changed
+- Removed `HasCallStack` constraint from `getInputMode` and `getOutputMode`
+
 ## [0.2.0.1] - 2020-06-27
 
 ### Changed
