@@ -54,3 +54,6 @@ jobs:
 
       - name: cabal build
         run: cabal build --disable-optimization
+
+      - name: cabal haddock
+        run: cabal haddock --disable-optimization
