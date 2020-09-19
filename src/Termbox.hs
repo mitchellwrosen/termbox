@@ -1,10 +1,9 @@
-{-# language InstanceSigs        #-}
-{-# language LambdaCase          #-}
-{-# language RankNTypes          #-}
-
-{-# language ScopedTypeVariables #-}
-{-# language TypeFamilies        #-}
-{-# language UnicodeSyntax       #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 -- |
 -- A @termbox@ program is typically constructed as an infinite loop that:
@@ -53,67 +52,71 @@
 -- This module is intended to be imported qualified.
 module Termbox
   ( -- * Initialization
-    run
-  , run_
-  , InitError(..)
+    run,
+    run_,
+    InitError (..),
+
     -- * Terminal contents
-  , set
-  , getCells
-  , clear
-  , flush
-  , Cell(..)
+    set,
+    getCells,
+    clear,
+    flush,
+    Cell (..),
+
     -- * Terminal size
-  , getSize
+    getSize,
+
     -- * Cursor manipulation
-  , setCursor
-  , hideCursor
+    setCursor,
+    hideCursor,
+
     -- * Event handling
-  , poll
-  , Event(..)
-  , Key(..)
-  , Mouse(..)
-  , PollError(..)
+    poll,
+    Event (..),
+    Key (..),
+    Mouse (..),
+    PollError (..),
+
     -- * Attributes
-  , black
-  , red
-  , green
-  , yellow
-  , blue
-  , magenta
-  , cyan
-  , white
-  , bold
-  , underline
-  , reverse
-  , Attr
+    black,
+    red,
+    green,
+    yellow,
+    blue,
+    magenta,
+    cyan,
+    white,
+    bold,
+    underline,
+    reverse,
+    Attr,
+
     -- * Terminal modes
-  , getInputMode
-  , setInputMode
-  , InputMode(..)
-  , MouseMode(..)
-  , getOutputMode
-  , setOutputMode
-  , OutputMode(..)
-  ) where
-
-import Prelude hiding (mod, reverse)
-
-import qualified Termbox.Internal as Tb
+    getInputMode,
+    setInputMode,
+    InputMode (..),
+    MouseMode (..),
+    getOutputMode,
+    setOutputMode,
+    OutputMode (..),
+  )
+where
 
 import Control.Exception
 import Control.Monad ((>=>), join)
 import Data.Array (Array)
-import Data.Bits ((.|.), (.&.))
+import qualified Data.Array.Storable as Array (freeze)
+import qualified Data.Array.Storable.Internals as Array
+import Data.Bits ((.&.), (.|.))
 import Data.Functor (void)
-import Data.Semigroup (Semigroup(..))
+import Data.Semigroup (Semigroup (..))
 import Data.Word
 import Foreign (ForeignPtr, Ptr, newForeignPtr_)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable
 import GHC.Stack
-
-import qualified Data.Array.Storable as Array (freeze)
-import qualified Data.Array.Storable.Internals as Array
+import qualified Termbox.Internal as Tb
+import Prelude hiding (mod, reverse)
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -137,16 +140,14 @@ run action =
         result <- unmask action `onException` Tb.shutdown
         Tb.shutdown
         pure (Right result)
-
-      Tb.FailedToOpenTTY     -> pure (Left FailedToOpenTTY)
-      Tb.PipeTrapError       -> pure (Left PipeTrapError)
+      Tb.FailedToOpenTTY -> pure (Left FailedToOpenTTY)
+      Tb.PipeTrapError -> pure (Left PipeTrapError)
       Tb.UnsupportedTerminal -> pure (Left UnsupportedTerminal)
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
 run_ :: IO a -> IO a
 run_ =
   run >=> either throwIO pure
-
 
 --------------------------------------------------------------------------------
 -- Terminal size
@@ -156,7 +157,6 @@ run_ =
 getSize :: IO (Int, Int)
 getSize =
   (,) <$> Tb.width <*> Tb.height
-
 
 --------------------------------------------------------------------------------
 -- Cursor
@@ -172,7 +172,6 @@ hideCursor :: IO ()
 hideCursor =
   Tb.setCursor Tb._HIDE_CURSOR Tb._HIDE_CURSOR
 
-
 --------------------------------------------------------------------------------
 -- Terminal contents
 --------------------------------------------------------------------------------
@@ -185,8 +184,8 @@ data Cell
 
 instance Show Cell where
   show (Cell ch fg bg) =
-    "Cell " ++ show ch ++ " " ++ show (attrToWord fg) ++ " " ++
-      show (attrToWord bg)
+    "Cell " ++ show ch ++ " " ++ show (attrToWord fg) ++ " "
+      ++ show (attrToWord bg)
 
 instance Storable Cell where
   sizeOf :: Cell -> Int
@@ -201,7 +200,7 @@ instance Storable Cell where
   peek ptr =
     Cell
       <$> Tb.getCellCh ptr
-      <*> (wordToAttr <$>  Tb.getCellFg ptr)
+      <*> (wordToAttr <$> Tb.getCellFg ptr)
       <*> (wordToAttr <$> Tb.getCellBg ptr)
 
   poke :: Ptr Cell -> Cell -> IO ()
@@ -220,19 +219,20 @@ set x y (Cell ch fg bg) =
 getCells :: IO (Array (Int, Int) Cell)
 getCells =
   join
-    (mkbuffer
-      <$> (tb_cell_buffer >>= newForeignPtr_)
-      <*> Tb.width
-      <*> Tb.height)
+    ( mkbuffer
+        <$> (tb_cell_buffer >>= newForeignPtr_)
+        <*> Tb.width
+        <*> Tb.height
+    )
   where
-    mkbuffer
-      :: ForeignPtr Cell
-      -> Int
-      -> Int
-      -> IO (Array (Int, Int) Cell)
+    mkbuffer ::
+      ForeignPtr Cell ->
+      Int ->
+      Int ->
+      IO (Array (Int, Int) Cell)
     mkbuffer buff w h =
-      Array.freeze =<<
-        Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h-1, w-1))
+      Array.freeze
+        =<< Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h -1, w -1))
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear :: Attr -> Attr -> IO ()
@@ -257,7 +257,8 @@ flush =
 -- * __Alt__. When ESC sequence is in the buffer and it doesn't match any known
 -- sequence, ESC enables the /alt/ modifier for the next keyboard event.
 data InputMode
-  = InputModeEsc MouseMode -- ^ Default.
+  = -- | Default.
+    InputModeEsc MouseMode
   | InputModeAlt MouseMode
   deriving (Eq, Ord, Show)
 
@@ -267,7 +268,8 @@ data InputMode
 --
 -- * __Yes__. Handle mouse events.
 data MouseMode
-  = MouseModeNo -- ^ Default.
+  = -- | Default.
+    MouseModeNo
   | MouseModeYes
   deriving (Eq, Ord, Show)
 
@@ -307,7 +309,8 @@ setInputMode =
 --
 -- * __256__. Supports colors /0..255/.
 data OutputMode
-  = OutputModeNormal -- ^ Default.
+  = -- | Default.
+    OutputModeNormal
   | OutputModeGrayscale
   | OutputMode216
   | OutputMode256
@@ -344,9 +347,12 @@ setOutputMode =
 
 -- | A input event.
 data Event
-  = EventKey !Key !Bool -- ^ Key event. The bool indicates the /alt/ modifier.
-  | EventResize !Int !Int -- ^ Resize event (width, then height)
-  | EventMouse !Mouse !Int !Int -- ^ Mouse event (column, then row)
+  = -- | Key event. The bool indicates the /alt/ modifier.
+    EventKey !Key !Bool
+  | -- | Resize event (width, then height)
+    EventResize !Int !Int
+  | -- | Mouse event (column, then row)
+    EventMouse !Mouse !Int !Int
   deriving (Eq, Show)
 
 -- | A key event.
@@ -455,7 +461,7 @@ poll =
 -- not well-documented in the original C codebase.
 data PollError
   = PollError
-  deriving Show
+  deriving (Show)
 
 instance Exception PollError
 
@@ -479,7 +485,6 @@ parseEventKey mod key ch =
       case ch of
         '\0' -> parseKey key
         _ -> KeyChar ch
-
     alt :: Bool
     alt =
       case mod of
@@ -607,9 +612,9 @@ instance Num Attr where
 -- | Left-biased color; attributes are merged.
 instance Semigroup Attr where
   (<>) :: Attr -> Attr -> Attr
-  Attr  0 ax <> Attr cy ay = Attr cy (ax .|. ay)
-  Attr cx ax <> Attr  0 ay = Attr cx (ax .|. ay)
-  Attr  _ ax <> Attr cy ay = Attr cy (ax .|. ay)
+  Attr 0 ax <> Attr cy ay = Attr cy (ax .|. ay)
+  Attr cx ax <> Attr 0 ay = Attr cx (ax .|. ay)
+  Attr _ ax <> Attr cy ay = Attr cy (ax .|. ay)
 
 wordToAttr :: Word16 -> Attr
 wordToAttr w =
