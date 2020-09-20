@@ -56,18 +56,18 @@ library
   build-depends:
     array,
     base ^>= 4.9 || ^>= 4.10 || ^>= 4.11 || ^>= 4.12 || ^>= 4.13 || ^>= 4.14
-  build-tool-depends: c2hs:c2hs
   c-sources:
     cbits/termbox.c
     cbits/utf8.c
   exposed-modules:
     Termbox
+    Termbox.Internal
   hs-source-dirs: src
   include-dirs: include
   other-modules:
     Termbox.Attr
-    Termbox.C
     Termbox.Cell
+    Termbox.Cursor
     Termbox.Event
     Termbox.InputMode
     Termbox.Key

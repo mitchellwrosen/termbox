@@ -19,7 +19,7 @@ where
 
 import Data.Bits ((.&.), (.|.))
 import Data.Word (Word16)
-import Termbox.C
+import Termbox.Internal
 import Prelude hiding (reverse)
 
 -- | A cell attribute, which includes its color, and whether or not it is

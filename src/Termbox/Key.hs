@@ -4,7 +4,8 @@ module Termbox.Key
   )
 where
 
-import Termbox.C (TbKey (..))
+import Data.Word (Word16)
+import Termbox.Internal
 
 -- | A key event.
 data Key
@@ -79,73 +80,73 @@ data Key
   deriving (Eq, Ord, Show)
 
 -- | Parse a 'Key' from a 'TbKey'.
-parseKey :: TbKey -> Key
-parseKey = \case
-  TbKeyArrowDown -> KeyArrowDown
-  TbKeyArrowLeft -> KeyArrowLeft
-  TbKeyArrowRight -> KeyArrowRight
-  TbKeyArrowUp -> KeyArrowUp
-  TbKeyBackspace -> KeyBackspace
-  TbKeyBackspace2 -> KeyBackspace2
-  TbKeyCtrl2 -> KeyCtrl2
-  TbKeyCtrl3 -> KeyCtrl3
-  TbKeyCtrl4 -> KeyCtrl4
-  TbKeyCtrl5 -> KeyCtrl5
-  TbKeyCtrl6 -> KeyCtrl6
-  TbKeyCtrl7 -> KeyCtrl7
-  TbKeyCtrl8 -> KeyCtrl8
-  TbKeyCtrlA -> KeyCtrlA
-  TbKeyCtrlB -> KeyCtrlB
-  TbKeyCtrlBackslash -> KeyCtrlBackslash
-  TbKeyCtrlC -> KeyCtrlC
-  TbKeyCtrlD -> KeyCtrlD
-  TbKeyCtrlE -> KeyCtrlE
-  TbKeyCtrlF -> KeyCtrlF
-  TbKeyCtrlG -> KeyCtrlG
-  TbKeyCtrlH -> KeyCtrlH
-  TbKeyCtrlI -> KeyCtrlI
-  TbKeyCtrlJ -> KeyCtrlJ
-  TbKeyCtrlK -> KeyCtrlK
-  TbKeyCtrlL -> KeyCtrlL
-  TbKeyCtrlLsqBracket -> KeyCtrlLsqBracket
-  TbKeyCtrlM -> KeyCtrlM
-  TbKeyCtrlN -> KeyCtrlN
-  TbKeyCtrlO -> KeyCtrlO
-  TbKeyCtrlP -> KeyCtrlP
-  TbKeyCtrlQ -> KeyCtrlQ
-  TbKeyCtrlR -> KeyCtrlR
-  TbKeyCtrlRsqBracket -> KeyCtrlRsqBracket
-  TbKeyCtrlS -> KeyCtrlS
-  TbKeyCtrlSlash -> KeyCtrlSlash
-  TbKeyCtrlT -> KeyCtrlT
-  TbKeyCtrlTilde -> KeyCtrlTilde
-  TbKeyCtrlU -> KeyCtrlU
-  TbKeyCtrlUnderscore -> KeyCtrlUnderscore
-  TbKeyCtrlV -> KeyCtrlV
-  TbKeyCtrlW -> KeyCtrlW
-  TbKeyCtrlX -> KeyCtrlX
-  TbKeyCtrlY -> KeyCtrlY
-  TbKeyCtrlZ -> KeyCtrlZ
-  TbKeyDelete -> KeyDelete
-  TbKeyEnd -> KeyEnd
-  TbKeyEnter -> KeyEnter
-  TbKeyEsc -> KeyEsc
-  TbKeyF1 -> KeyF1
-  TbKeyF10 -> KeyF10
-  TbKeyF11 -> KeyF11
-  TbKeyF12 -> KeyF12
-  TbKeyF2 -> KeyF2
-  TbKeyF3 -> KeyF3
-  TbKeyF4 -> KeyF4
-  TbKeyF5 -> KeyF5
-  TbKeyF6 -> KeyF6
-  TbKeyF7 -> KeyF7
-  TbKeyF8 -> KeyF8
-  TbKeyF9 -> KeyF9
-  TbKeyHome -> KeyHome
-  TbKeyInsert -> KeyInsert
-  TbKeyPageDn -> KeyPageDn
-  TbKeyPageUp -> KeyPageUp
-  TbKeySpace -> KeySpace
-  TbKeyTab -> KeyTab
-  key -> error ("termbox: unknown key " ++ show key)
+parseKey :: Word16 -> Key
+parseKey key
+  | key == tB_KEY_ARROW_DOWN = KeyArrowDown
+  | key == tB_KEY_ARROW_LEFT = KeyArrowLeft
+  | key == tB_KEY_ARROW_RIGHT = KeyArrowRight
+  | key == tB_KEY_ARROW_UP = KeyArrowUp
+  | key == tB_KEY_BACKSPACE = KeyBackspace
+  | key == tB_KEY_BACKSPACE2 = KeyBackspace2
+  | key == tB_KEY_CTRL_2 = KeyCtrl2
+  | key == tB_KEY_CTRL_3 = KeyCtrl3
+  | key == tB_KEY_CTRL_4 = KeyCtrl4
+  | key == tB_KEY_CTRL_5 = KeyCtrl5
+  | key == tB_KEY_CTRL_6 = KeyCtrl6
+  | key == tB_KEY_CTRL_7 = KeyCtrl7
+  | key == tB_KEY_CTRL_8 = KeyCtrl8
+  | key == tB_KEY_CTRL_A = KeyCtrlA
+  | key == tB_KEY_CTRL_B = KeyCtrlB
+  | key == tB_KEY_CTRL_BACKSLASH = KeyCtrlBackslash
+  | key == tB_KEY_CTRL_C = KeyCtrlC
+  | key == tB_KEY_CTRL_D = KeyCtrlD
+  | key == tB_KEY_CTRL_E = KeyCtrlE
+  | key == tB_KEY_CTRL_F = KeyCtrlF
+  | key == tB_KEY_CTRL_G = KeyCtrlG
+  | key == tB_KEY_CTRL_H = KeyCtrlH
+  | key == tB_KEY_CTRL_I = KeyCtrlI
+  | key == tB_KEY_CTRL_J = KeyCtrlJ
+  | key == tB_KEY_CTRL_K = KeyCtrlK
+  | key == tB_KEY_CTRL_L = KeyCtrlL
+  | key == tB_KEY_CTRL_LSQ_BRACKET = KeyCtrlLsqBracket
+  | key == tB_KEY_CTRL_M = KeyCtrlM
+  | key == tB_KEY_CTRL_N = KeyCtrlN
+  | key == tB_KEY_CTRL_O = KeyCtrlO
+  | key == tB_KEY_CTRL_P = KeyCtrlP
+  | key == tB_KEY_CTRL_Q = KeyCtrlQ
+  | key == tB_KEY_CTRL_R = KeyCtrlR
+  | key == tB_KEY_CTRL_RSQ_BRACKET = KeyCtrlRsqBracket
+  | key == tB_KEY_CTRL_S = KeyCtrlS
+  | key == tB_KEY_CTRL_SLASH = KeyCtrlSlash
+  | key == tB_KEY_CTRL_T = KeyCtrlT
+  | key == tB_KEY_CTRL_TILDE = KeyCtrlTilde
+  | key == tB_KEY_CTRL_U = KeyCtrlU
+  | key == tB_KEY_CTRL_UNDERSCORE = KeyCtrlUnderscore
+  | key == tB_KEY_CTRL_V = KeyCtrlV
+  | key == tB_KEY_CTRL_W = KeyCtrlW
+  | key == tB_KEY_CTRL_X = KeyCtrlX
+  | key == tB_KEY_CTRL_Y = KeyCtrlY
+  | key == tB_KEY_CTRL_Z = KeyCtrlZ
+  | key == tB_KEY_DELETE = KeyDelete
+  | key == tB_KEY_END = KeyEnd
+  | key == tB_KEY_ENTER = KeyEnter
+  | key == tB_KEY_ESC = KeyEsc
+  | key == tB_KEY_F1 = KeyF1
+  | key == tB_KEY_F10 = KeyF10
+  | key == tB_KEY_F11 = KeyF11
+  | key == tB_KEY_F12 = KeyF12
+  | key == tB_KEY_F2 = KeyF2
+  | key == tB_KEY_F3 = KeyF3
+  | key == tB_KEY_F4 = KeyF4
+  | key == tB_KEY_F5 = KeyF5
+  | key == tB_KEY_F6 = KeyF6
+  | key == tB_KEY_F7 = KeyF7
+  | key == tB_KEY_F8 = KeyF8
+  | key == tB_KEY_F9 = KeyF9
+  | key == tB_KEY_HOME = KeyHome
+  | key == tB_KEY_INSERT = KeyInsert
+  | key == tB_KEY_PGDN = KeyPageDn
+  | key == tB_KEY_PGUP = KeyPageUp
+  | key == tB_KEY_SPACE = KeySpace
+  | key == tB_KEY_TAB = KeyTab
+  | otherwise = error ("termbox: unknown key " ++ show key)

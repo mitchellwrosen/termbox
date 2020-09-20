@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Termbox.Event
   ( Event (..),
     poll,
@@ -6,10 +8,13 @@ module Termbox.Event
 where
 
 import Control.Exception (Exception, throwIO)
+import Data.Char (chr)
+import Data.Int (Int32)
 import Data.Semigroup (Semigroup (..))
+import Data.Word (Word32)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable (peek)
-import Termbox.C
+import Termbox.Internal
 import Termbox.Key (Key (KeyChar), parseKey)
 import Termbox.Mouse (Mouse, parseMouse)
 import Prelude hiding (mod)
@@ -53,15 +58,23 @@ instance Exception PollError
 -- | Parse an 'Event' from a 'TbEvent'.
 parseEvent :: TbEvent -> Event
 parseEvent = \case
-  TbEvent TbEventTypeKey mod key ch _ _ _ _ ->
-    EventKey
-      ( case ch of
-          '\0' -> parseKey key
-          _ -> KeyChar ch
-      )
-      ( case mod of
-          TbModAlt -> True
-          _ -> False
-      )
-  TbEvent TbEventTypeResize _ _ _ w h _ _ -> EventResize w h
-  TbEvent TbEventTypeMouse _ key _ _ _ x y -> EventMouse (parseMouse key) x y
+  TbEvent typ mod key ch w h x y ->
+    if typ == tB_EVENT_KEY
+      then
+        EventKey
+          ( case ch of
+              0 -> parseKey key
+              _ -> KeyChar (chr (fromIntegral @Word32 @Int ch))
+          )
+          ( case () of
+              _ | mod == 0 -> False
+              _ | mod == tB_MOD_ALT -> True
+              _ -> error ("termbox: unknown key modifier " ++ show mod)
+          )
+      else
+        if typ == tB_EVENT_RESIZE
+          then EventResize (fromIntegral @Int32 @Int w) (fromIntegral @Int32 @Int h)
+          else
+            if typ == tB_EVENT_MOUSE
+              then EventMouse (parseMouse key) (fromIntegral @Int32 @Int x) (fromIntegral @Int32 @Int y)
+              else error ("termbox: unknown event type " ++ show typ)

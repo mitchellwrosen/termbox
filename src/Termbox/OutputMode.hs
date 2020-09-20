@@ -1,13 +1,12 @@
 module Termbox.OutputMode
   ( OutputMode (..),
     defaultOutputMode,
-    getOutputMode,
     setOutputMode,
   )
 where
 
 import Data.Functor (void)
-import Termbox.C
+import Termbox.Internal
 
 -- | The output modes.
 --
@@ -31,27 +30,11 @@ defaultOutputMode :: OutputMode
 defaultOutputMode =
   OutputModeNormal
 
--- | Get the current output mode.
-getOutputMode :: IO OutputMode
-getOutputMode =
-  f <$> tb_select_output_mode TbOutputModeCurrent
-  where
-    f :: TbOutputMode -> OutputMode
-    f = \case
-      TbOutputModeNormal -> OutputModeNormal
-      TbOutputMode256 -> OutputMode256
-      TbOutputMode216 -> OutputMode216
-      TbOutputModeGrayscale -> OutputModeGrayscale
-      TbOutputModeCurrent -> error "termbox: getOutputMode returned OutputModeCurrent"
-
 -- | Set the output mode.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
-  void . tb_select_output_mode . f
-  where
-    f :: OutputMode -> TbOutputMode
-    f = \case
-      OutputModeNormal -> TbOutputModeNormal
-      OutputMode256 -> TbOutputMode256
-      OutputMode216 -> TbOutputMode216
-      OutputModeGrayscale -> TbOutputModeGrayscale
+  void . tb_select_output_mode . \case
+    OutputModeNormal -> tB_OUTPUT_NORMAL
+    OutputMode256 -> tB_OUTPUT_256
+    OutputMode216 -> tB_OUTPUT_216
+    OutputModeGrayscale -> tB_OUTPUT_GRAYSCALE

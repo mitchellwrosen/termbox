@@ -108,11 +108,11 @@ import Termbox.Attr
     white,
     yellow,
   )
-import Termbox.C
 import Termbox.Cell (Cell (..), getCells, set)
 import Termbox.Cursor (hideCursor, setCursor)
 import Termbox.Event (Event (..), PollError (..), poll)
 import Termbox.InputMode (InputMode (..), defaultInputMode, setInputMode)
+import Termbox.Internal
 import Termbox.Key (Key (..))
 import Termbox.Mouse (Mouse (..))
 import Termbox.MouseMode (MouseMode (..))
@@ -135,9 +135,10 @@ instance Exception InitError
 -- | Run a @termbox@ program and restore the terminal state afterwards.
 run :: InputMode -> OutputMode -> IO a -> IO (Either InitError a)
 run inputMode outputMode action = do
-  mask $ \unmask ->
-    tb_init >>= \case
-      TbInitOk -> do
+  mask $ \unmask -> do
+    initResult <- tb_init
+    case () of
+      _ | initResult == 0 -> do
         result <-
           unmask
             ( do
@@ -148,13 +149,14 @@ run inputMode outputMode action = do
             `onException` shutdown
         shutdown
         pure (Right result)
-      TbFailedToOpenTTY -> pure (Left FailedToOpenTTY)
-      TbPipeTrapError -> pure (Left PipeTrapError)
-      TbUnsupportedTerminal -> pure (Left UnsupportedTerminal)
+      _ | initResult == tB_EFAILED_TO_OPEN_TTY -> pure (Left FailedToOpenTTY)
+      _ | initResult == tB_EPIPE_TRAP_ERROR -> pure (Left PipeTrapError)
+      _ | initResult == tB_EUNSUPPORTED_TERMINAL -> pure (Left UnsupportedTerminal)
+      _ -> error ("termbox: unknown tb_init error " ++ show initResult)
   where
     shutdown :: IO ()
     shutdown = do
-      _ <- tb_select_output_mode TbOutputModeNormal
+      _ <- tb_select_output_mode tB_OUTPUT_NORMAL
       tb_shutdown
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.

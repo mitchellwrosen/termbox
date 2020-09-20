@@ -4,7 +4,7 @@ module Termbox.Cursor
   )
 where
 
-import Termbox.C
+import Termbox.Internal
 
 -- | Set the cursor coordinates (column, then row).
 setCursor :: Int -> Int -> IO ()

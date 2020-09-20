@@ -8,36 +8,38 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 ## Unreleased
 
 ### Added
-- Added `defaultInputMode`, `defaultOutputMode`
+- Add `defaultInputMode`, `defaultOutputMode`
+- Export `Termbox.Internal` module that (roughly) contains 1:1 C bindings
 
 ### Changed
-- Removed `HasCallStack` constraint from `getInputMode` and `getOutputMode`
-- Added `InputMode` and `OutputMode` arguments to `run`
+- Remove `HasCallStack` constraint from `getInputMode` and `getOutputMode`
+- Add `InputMode` and `OutputMode` arguments to `run`
 - Reset output mode to "normal" on shutdown to work around a small bug in termbox.c that retains the output mode across
   separate invocations of init/shutdown
 
 ### Removed
-- Removed `getInputMode`, `setInputMode`, `getOutputMode`, `setOutputMode`
+- Remove `getInputMode`, `setInputMode`, `getOutputMode`, `setOutputMode`
+- Remove build dependency on `c2hs`
 
 ## [0.2.0.1] - 2020-06-27
 
 ### Changed
-- Bumped `base` upper bound
+- Bump `base` upper bound
 
 ## [0.2.0] - 2019-06-21
 
 ### Added
-- `getCells` function
-- `run` function
+- Add `getCells` function
+- Add `run` function
 
 ### Changed
-- Renamed `size` to `getSize`
-- Renamed `main` to `run_` and return errors as an `Either` instead of throwing.
-- Made `Attr`'s `Semigroup` instance right-biased instead of left-biased.
-- Made `Attr`'s `Num` instance total.
+- Rename `size` to `getSize`
+- Rename `main` to `run_` and return errors as an `Either` instead of throwing.
+- Make `Attr`'s `Semigroup` instance right-biased instead of left-biased.
+- Make `Attr`'s `Num` instance total.
 
 ### Removed
-- `buffer` function
+- Add `buffer` function
 
 ## [0.1.0] - 2018-07-18
 
