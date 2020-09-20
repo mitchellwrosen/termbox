@@ -31,14 +31,6 @@ data Event
 
 -- | Block until an 'Event' arrives.
 --
--- /Note/: @termbox v1.1.2@ does not properly handle OS signals that interrupt
--- the underlying @select@ system call, so unfortunately the familiar @Ctrl-C@
--- will not be able to stop a program stuck in 'pollEvent'.
---
--- You can work around this issue by polling in a background thread using the
--- @threaded@ runtime, or simply writing event-handling code that is responsive
--- to intuitive "quit" keys like @q@ and @Esc@.
---
 -- /Throws/: 'PollError'
 poll :: IO Event
 poll =
