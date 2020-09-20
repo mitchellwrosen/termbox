@@ -10,9 +10,7 @@ import Termbox.Attr (attrToWord)
 import Termbox.Cell (Cell (Cell))
 import Termbox.Internal (tb_change_cell)
 
--- | A grid of cells.
---
--- Create a 'Cells' with 'set' or 'mempty' and combine them with ('<>').
+-- | A grid of cells. Create with 'set' and combine with ('<>').
 newtype Cells
   = Cells (IO ())
   deriving {- newtype -} (Monoid, Semigroup)

@@ -27,11 +27,10 @@ import Prelude hiding (reverse)
 -- bold, underlined, and/or reversed.
 --
 -- A cell can only have one color, but may be (for example) bold /and/
--- underlined. The 'Monoid' instance combines 'Attr's this way, with a right
--- bias.
+-- underlined. The 'Monoid' instance combines 'Attr's this way, with a right bias.
 data Attr
   = Attr !Word16 {- color -} !Word16 {- attr -}
-  deriving (Eq)
+  deriving (Eq, Show)
 
 instance Monoid Attr where
   mempty :: Attr
@@ -54,7 +53,7 @@ instance Num Attr where
   abs = id
   signum = id
 
--- | Left-biased color; attributes are merged.
+-- | Right-biased color; attributes are merged.
 instance Semigroup Attr where
   (<>) :: Attr -> Attr -> Attr
   Attr 0 ax <> Attr cy ay = Attr cy (ax .|. ay)

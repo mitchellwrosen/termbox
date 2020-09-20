@@ -12,7 +12,6 @@
 -- @
 -- {-\# LANGUAGE LambdaCase \#-}
 --
--- import Data.Foldable (for_)
 -- import qualified Termbox
 --
 -- main :: IO ()
@@ -21,17 +20,15 @@
 --
 -- loop :: Int -> IO ()
 -- loop n = do
---   Termbox.'render' (cells n) Termbox.NoMouse
+--   Termbox.'render' (string (show n)) Termbox.'NoCursor'
 --
 --   Termbox.'poll' >>= \\case
---     Termbox.'EventKey' Termbox.'KeyEsc' _ -> pure ()
+--     Termbox.'EventKey' Termbox.'KeyEsc' -> pure ()
 --     _ -> loop (n+1)
 --
--- cells :: Int -> Termbox.'Cells'
--- cells n =
---   foldMap
---     (\\(i, c) -> Termbox.'set' i 0 (Termbox.'Cell' c mempty mempty))
---     (zip [0..] (show n))
+-- string :: Int -> Int -> String -> Termbox.'Cells'
+-- string col row =
+--   foldMap (\\(i, c) -> Termbox.'set' (col + i) row (Termbox.'Cell' c 0 0)) . zip [0..]
 -- @
 --
 -- Other termbox features include cell attributes (style, color), cursor
@@ -57,6 +54,7 @@ module Termbox
     poll,
     Event (..),
     Key (..),
+    -- $key-aliases
     pattern KeyCtrlH,
     pattern KeyCtrlLsqBracket,
     pattern KeyCtrl2,
@@ -124,11 +122,11 @@ import Termbox.Key
 import Termbox.Mouse (Mouse (..))
 import Prelude hiding (reverse)
 
---------------------------------------------------------------------------------
--- Initialization
---------------------------------------------------------------------------------
+-- $key-aliases
+-- In a few cases, distinct key sequences map to equivalent key events. The pattern synonyms below are provided for an
+-- alternate syntax in these cases, if desired.
 
--- | Termbox initialization errors that can be returned by 'run'.
+-- | Termbox initialization errors.
 data InitError
   = FailedToOpenTTY
   | PipeTrapError
@@ -165,6 +163,8 @@ run action = do
       tb_shutdown
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
+--
+-- /Throws/: 'InitError'
 run_ :: IO a -> IO a
 run_ =
   run >=> either throwIO pure

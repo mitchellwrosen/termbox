@@ -5,7 +5,7 @@ version: 0.2.0.1
 category: User Interfaces
 description:
   This package provides a thin wrapper around @termbox v1.1.2@, a simple C
-  library for writing text-based user interfaces: <https://github.com/nsf/termbox>
+  library for writing text-based user interfaces: <https://github.com/termbox/termbox>
   .
   The full source of @termbox v1.1.2@ (1000 lines of C) is bundled; you do
   not need to install any system packages to use this library.

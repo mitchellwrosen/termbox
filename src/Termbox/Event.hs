@@ -21,7 +21,7 @@ import Prelude hiding (mod)
 
 -- | A input event.
 data Event
-  = -- | Key event.
+  = -- | Key event
     EventKey !Key
   | -- | Resize event (width, then height)
     EventResize !Int !Int
@@ -39,8 +39,8 @@ poll =
       -1 -> throwIO PollError
       _ -> parseEvent <$> peek ptr
 
--- | An error occurred when 'poll'ing, due to mysterious circumstances that are
--- not well-documented in the original C codebase.
+-- | An error occurred when polling, due to mysterious circumstances that are not well-documented in the original C
+-- codebase.
 data PollError
   = PollError
   deriving (Show)

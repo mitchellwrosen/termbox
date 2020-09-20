@@ -18,15 +18,10 @@ import Foreign.Storable
 import Termbox.Attr (Attr, attrToWord, wordToAttr)
 import Termbox.Internal
 
--- | A 'Cell' contains a character, foreground attribute, and background
--- attribute.
+-- | A cell contains a character, foreground attribute, and background attribute.
 data Cell
   = Cell !Char !Attr !Attr
-  deriving (Eq)
-
-instance Show Cell where
-  show (Cell ch fg bg) =
-    "Cell " ++ show ch ++ " " ++ show (attrToWord fg) ++ " " ++ show (attrToWord bg)
+  deriving (Eq, Show)
 
 instance Storable Cell where
   sizeOf :: Cell -> Int
