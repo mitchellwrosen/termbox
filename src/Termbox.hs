@@ -17,7 +17,7 @@
 --
 -- main :: IO ()
 -- main =
---   Termbox.'run_' 'defaultInputMode' 'defaultOutputMode' (loop 0)
+--   Termbox.'run_' (loop 0)
 --
 -- loop :: Int -> IO ()
 -- loop n = do
@@ -83,17 +83,12 @@ module Termbox
     underline,
     reverse,
     Attr,
-
-    -- * Terminal modes
-    defaultInputMode,
-    InputMode (..),
-    MouseMode (..),
   )
 where
 
 import Control.Exception
 import Control.Monad ((>=>))
-import Data.Functor (void)
+import Data.Bits ((.|.))
 import Data.Semigroup (Semigroup (..))
 import Termbox.Attr
   ( Attr,
@@ -113,7 +108,6 @@ import Termbox.Cell (Cell (Cell), getCells)
 import Termbox.Cells (Cells (Cells), set)
 import Termbox.Cursor (Cursor (Cursor, NoCursor))
 import Termbox.Event (Event (..), PollError (..), poll)
-import Termbox.InputMode (InputMode (..), defaultInputMode, setInputMode)
 import Termbox.Internal
 import Termbox.Key
   ( Key (..),
@@ -129,7 +123,6 @@ import Termbox.Key
     pattern KeyCtrlUnderscore,
   )
 import Termbox.Mouse (Mouse (..))
-import Termbox.MouseMode (MouseMode (..))
 import Prelude hiding (reverse)
 
 --------------------------------------------------------------------------------
@@ -146,8 +139,8 @@ data InitError
 instance Exception InitError
 
 -- | Run a @termbox@ program and restore the terminal state afterwards.
-run :: InputMode -> IO a -> IO (Either InitError a)
-run inputMode action = do
+run :: IO a -> IO (Either InitError a)
+run action = do
   mask $ \unmask -> do
     initResult <- tb_init
     case () of
@@ -155,8 +148,8 @@ run inputMode action = do
         result <-
           unmask
             ( do
-                setInputMode inputMode
-                void (tb_select_output_mode tB_OUTPUT_256)
+                _ <- tb_select_input_mode tB_INPUT_MOUSE
+                _ <- tb_select_output_mode tB_OUTPUT_256
                 action
             )
             `onException` shutdown
@@ -173,9 +166,9 @@ run inputMode action = do
       tb_shutdown
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
-run_ :: InputMode -> IO a -> IO a
-run_ inputMode =
-  run inputMode >=> either throwIO pure
+run_ :: IO a -> IO a
+run_ =
+  run >=> either throwIO pure
 
 -- | Get the terminal size (width, then height).
 getSize :: IO (Int, Int)

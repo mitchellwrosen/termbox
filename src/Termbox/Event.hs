@@ -21,8 +21,8 @@ import Prelude hiding (mod)
 
 -- | A input event.
 data Event
-  = -- | Key event. The bool indicates the /alt/ modifier.
-    EventKey !Key !Bool
+  = -- | Key event.
+    EventKey !Key
   | -- | Resize event (width, then height)
     EventResize !Int !Int
   | -- | Mouse event (column, then row)
@@ -57,24 +57,9 @@ instance Exception PollError
 
 -- | Parse an 'Event' from a 'TbEvent'.
 parseEvent :: TbEvent -> Event
-parseEvent = \case
-  TbEvent typ mod key ch w h x y ->
-    if typ == tB_EVENT_KEY
-      then
-        EventKey
-          ( case ch of
-              0 -> parseKey key
-              _ -> KeyChar (chr (fromIntegral @Word32 @Int ch))
-          )
-          ( case () of
-              _ | mod == 0 -> False
-              _ | mod == tB_MOD_ALT -> True
-              _ -> error ("termbox: unknown key modifier " ++ show mod)
-          )
-      else
-        if typ == tB_EVENT_RESIZE
-          then EventResize (fromIntegral @Int32 @Int w) (fromIntegral @Int32 @Int h)
-          else
-            if typ == tB_EVENT_MOUSE
-              then EventMouse (parseMouse key) (fromIntegral @Int32 @Int x) (fromIntegral @Int32 @Int y)
-              else error ("termbox: unknown event type " ++ show typ)
+parseEvent (TbEvent typ _mod key ch w h x y)
+  | typ == tB_EVENT_KEY =
+    EventKey (if ch == 0 then parseKey key else KeyChar (chr (fromIntegral @Word32 @Int ch)))
+  | typ == tB_EVENT_RESIZE = EventResize (fromIntegral @Int32 @Int w) (fromIntegral @Int32 @Int h)
+  | typ == tB_EVENT_MOUSE = EventMouse (parseMouse key) (fromIntegral @Int32 @Int x) (fromIntegral @Int32 @Int y)
+  | otherwise = error ("termbox: unknown event type " ++ show typ)

@@ -17,7 +17,6 @@ data Mouse
   | MouseWheelUp
   deriving (Eq, Ord, Show)
 
--- | Parse a 'Mouse' from a 'TbKey'.
 parseMouse :: Word16 -> Mouse
 parseMouse key
   | key == tB_KEY_MOUSE_LEFT = MouseLeft

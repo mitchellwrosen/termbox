@@ -71,10 +71,8 @@ library
     Termbox.Cells
     Termbox.Cursor
     Termbox.Event
-    Termbox.InputMode
     Termbox.Key
     Termbox.Mouse
-    Termbox.MouseMode
 
 executable termbox-example-colors
   import: component
