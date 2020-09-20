@@ -7,8 +7,17 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 
 ## Unreleased
 
+### Added
+- Added `defaultInputMode`, `defaultOutputMode`
+
 ### Changed
 - Removed `HasCallStack` constraint from `getInputMode` and `getOutputMode`
+- Added `InputMode` and `OutputMode` arguments to `run`
+- Reset output mode to "normal" on shutdown to work around a small bug in termbox.c that retains the output mode across
+  separate invocations of init/shutdown
+
+### Removed
+- Removed `getInputMode`, `setInputMode`, `getOutputMode`, `setOutputMode`
 
 ## [0.2.0.1] - 2020-06-27
 

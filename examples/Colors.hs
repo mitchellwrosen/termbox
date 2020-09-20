@@ -1,122 +1,101 @@
--- | Something like https://github.com/nsf/termbox/blob/8b72969ff4bba120d8b8e4a29bae07102ed71055/src/demo/output.c
-
 import Control.Monad
 import Data.Foldable
+import Data.Functor (void)
+import qualified Termbox
 
-import qualified Termbox as Tb
-
-main :: IO (Either Tb.InitError ())
-main =
-  Tb.run $ do
-    do
-      let
-        rectangles :: [(Int, Int, Int, Int)]
+main :: IO (Either Termbox.InitError ())
+main = do
+  Termbox.run Termbox.defaultInputMode Termbox.defaultOutputMode $ do
+    let rectangles :: [(Int, Int, Int, Int)]
         rectangles = do
           y0 <- [0, 4 ..]
           x0 <- [0, 8 .. 24]
-          pure (x0, y0, x0+7, y0+3)
+          pure (x0, y0, x0 + 7, y0 + 3)
 
-      let
-        colors :: [(String, Tb.Attr, Tb.Attr)]
+    let colors :: [(String, Termbox.Attr, Termbox.Attr)]
         colors =
-          [ ("black", Tb.black, Tb.white)
-          , ("red", Tb.red, Tb.black)
-          , ("green", Tb.green, Tb.black)
-          , ("yellow", Tb.yellow, Tb.black)
-          , ("blue", Tb.blue, Tb.black)
-          , ("magenta", Tb.magenta, Tb.black)
-          , ("cyan", Tb.cyan, Tb.black)
-          , ("white", Tb.white, Tb.black)
+          [ ("black", Termbox.black, Termbox.white),
+            ("red", Termbox.red, Termbox.black),
+            ("green", Termbox.green, Termbox.black),
+            ("yellow", Termbox.yellow, Termbox.black),
+            ("blue", Termbox.blue, Termbox.black),
+            ("magenta", Termbox.magenta, Termbox.black),
+            ("cyan", Termbox.cyan, Termbox.black),
+            ("white", Termbox.white, Termbox.black)
           ]
 
-      zipWithM_
-        (\(x0, y0, x1, y1) (name, bg, fg) -> do
-          rectangle x0 y0 x1 y1 (Tb.Cell ' ' mempty bg)
-          string x0 y0 fg bg name)
-        rectangles
-        colors
+    zipWithM_
+      ( \(x0, y0, x1, y1) (name, bg, fg) -> do
+          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty bg)
+          string x0 y0 fg bg name
+      )
+      rectangles
+      colors
 
-    Tb.flush
-    _ <- Tb.poll
+    Termbox.flush
+    void Termbox.poll
 
-    clear
-    Tb.setOutputMode Tb.OutputModeGrayscale
-
-    do
-      let
-        rectangles :: [(Int, Int, Int, Int)]
+  Termbox.run Termbox.defaultInputMode Termbox.OutputModeGrayscale $ do
+    let rectangles :: [(Int, Int, Int, Int)]
         rectangles = do
           y0 <- [0, 4 ..]
           x0 <- [0, 8 .. 40]
-          pure (x0, y0, x0+7, y0+3)
+          pure (x0, y0, x0 + 7, y0 + 3)
 
-      zipWithM_
-        (\(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Tb.Cell ' ' mempty (fromInteger n))
-          string x0 y0 12 (fromInteger n) (show n))
-        rectangles
-        [1..23]
+    zipWithM_
+      ( \(x0, y0, x1, y1) n -> do
+          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+          string x0 y0 12 (fromInteger n) (show n)
+      )
+      rectangles
+      [0 .. 23]
 
-    Tb.flush
-    _ <- Tb.poll
+    Termbox.flush
+    void Termbox.poll
 
-    clear
-    Tb.setOutputMode Tb.OutputMode216
-
-    do
-      let
-        rectangles :: [(Int, Int, Int, Int)]
+  Termbox.run Termbox.defaultInputMode Termbox.OutputMode216 $ do
+    let rectangles :: [(Int, Int, Int, Int)]
         rectangles = do
-          y0 <- [0, 2..]
+          y0 <- [0, 2 ..]
           x0 <- [0, 4 .. 40]
-          pure (x0, y0, x0+3, y0+1)
+          pure (x0, y0, x0 + 3, y0 + 1)
 
-      zipWithM_
-        (\(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Tb.Cell ' ' mempty (fromInteger n))
-          string x0 y0 2 (fromInteger n) (show n))
-        rectangles
-        [1..216]
+    zipWithM_
+      ( \(x0, y0, x1, y1) n -> do
+          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+          string x0 y0 2 (fromInteger n) (show n)
+      )
+      rectangles
+      [0 .. 215]
 
-    Tb.flush
-    _ <- Tb.poll
+    Termbox.flush
+    void Termbox.poll
 
-    clear
-    Tb.setOutputMode Tb.OutputMode256
-
-    do
-      let
-        rectangles :: [(Int, Int, Int, Int)]
+  Termbox.run Termbox.defaultInputMode Termbox.OutputMode256 $ do
+    let rectangles :: [(Int, Int, Int, Int)]
         rectangles = do
-          y0 <- [0, 2..]
+          y0 <- [0, 2 ..]
           x0 <- [0, 4 .. 48]
-          pure (x0, y0, x0+3, y0+1)
+          pure (x0, y0, x0 + 3, y0 + 1)
 
-      zipWithM_
-        (\(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Tb.Cell ' ' mempty (fromInteger n))
-          string x0 y0 2 (fromInteger n) (show n))
-        rectangles
-        [1..255]
+    zipWithM_
+      ( \(x0, y0, x1, y1) n -> do
+          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+          string x0 y0 1 (fromInteger n) (show n)
+      )
+      rectangles
+      [0 .. 255]
 
-    Tb.flush
-    _ <- Tb.poll
+    Termbox.flush
+    void Termbox.poll
 
-    pure ()
-
-clear :: IO ()
-clear = do
-  Tb.setOutputMode Tb.OutputModeNormal
-  Tb.clear mempty mempty
-  Tb.flush
-
-string :: Int -> Int -> Tb.Attr -> Tb.Attr -> [Char] -> IO ()
+string :: Int -> Int -> Termbox.Attr -> Termbox.Attr -> [Char] -> IO ()
 string x0 y fg bg =
   zipWithM_
-    (\x c -> Tb.set x y (Tb.Cell c fg bg))
-    [x0..]
+    (\x c -> Termbox.set x y (Termbox.Cell c fg bg))
+    [x0 ..]
 
-rectangle :: Int -> Int -> Int -> Int -> Tb.Cell -> IO ()
+rectangle :: Int -> Int -> Int -> Int -> Termbox.Cell -> IO ()
 rectangle x0 y0 x1 y1 c =
-  for_ ((,) <$> [x0..x1] <*> [y0..y1]) $ \(x, y) ->
-    Tb.set x y c
+  for_ ((,) <$> [x0 .. x1] <*> [y0 .. y1]) $ \(x, y) ->
+    Termbox.set x y c

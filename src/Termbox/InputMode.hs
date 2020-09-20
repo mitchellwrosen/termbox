@@ -1,5 +1,6 @@
 module Termbox.InputMode
   ( InputMode (..),
+    defaultInputMode,
     getInputMode,
     setInputMode,
   )
@@ -22,6 +23,10 @@ data InputMode
     InputModeEsc MouseMode
   | InputModeAlt MouseMode
   deriving (Eq, Ord, Show)
+
+defaultInputMode :: InputMode
+defaultInputMode =
+  InputModeEsc MouseModeNo
 
 -- | Get the current input mode.
 getInputMode :: IO InputMode

@@ -1,5 +1,6 @@
 module Termbox.OutputMode
   ( OutputMode (..),
+    defaultOutputMode,
     getOutputMode,
     setOutputMode,
   )
@@ -25,6 +26,10 @@ data OutputMode
   | OutputMode216
   | OutputMode256
   deriving (Eq, Ord, Show)
+
+defaultOutputMode :: OutputMode
+defaultOutputMode =
+  OutputModeNormal
 
 -- | Get the current output mode.
 getOutputMode :: IO OutputMode
