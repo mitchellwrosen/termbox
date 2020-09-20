@@ -24,15 +24,18 @@ main = do
             ("white", Termbox.white, Termbox.black)
           ]
 
-    zipWithM_
-      ( \(x0, y0, x1, y1) (name, bg, fg) -> do
-          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty bg)
-          string x0 y0 fg bg name
+    Termbox.render
+      ( mconcat
+          ( zipWith
+              ( \(x0, y0, x1, y1) (name, bg, fg) ->
+                  rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty bg) <> string x0 y0 fg bg name
+              )
+              rectangles
+              colors
+          )
       )
-      rectangles
-      colors
+      Termbox.NoCursor
 
-    Termbox.flush
     void Termbox.poll
 
   Termbox.run Termbox.defaultInputMode Termbox.OutputModeGrayscale $ do
@@ -42,15 +45,19 @@ main = do
           x0 <- [0, 8 .. 40]
           pure (x0, y0, x0 + 7, y0 + 3)
 
-    zipWithM_
-      ( \(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
-          string x0 y0 12 (fromInteger n) (show n)
+    Termbox.render
+      ( mconcat
+          ( zipWith
+              ( \(x0, y0, x1, y1) n ->
+                  rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+                    <> string x0 y0 12 (fromInteger n) (show n)
+              )
+              rectangles
+              [0 .. 23]
+          )
       )
-      rectangles
-      [0 .. 23]
+      Termbox.NoCursor
 
-    Termbox.flush
     void Termbox.poll
 
   Termbox.run Termbox.defaultInputMode Termbox.OutputMode216 $ do
@@ -60,15 +67,19 @@ main = do
           x0 <- [0, 4 .. 40]
           pure (x0, y0, x0 + 3, y0 + 1)
 
-    zipWithM_
-      ( \(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
-          string x0 y0 2 (fromInteger n) (show n)
+    Termbox.render
+      ( mconcat
+          ( zipWith
+              ( \(x0, y0, x1, y1) n ->
+                  rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+                    <> string x0 y0 2 (fromInteger n) (show n)
+              )
+              rectangles
+              [0 .. 215]
+          )
       )
-      rectangles
-      [0 .. 215]
+      Termbox.NoCursor
 
-    Termbox.flush
     void Termbox.poll
 
   Termbox.run Termbox.defaultInputMode Termbox.OutputMode256 $ do
@@ -78,24 +89,25 @@ main = do
           x0 <- [0, 4 .. 48]
           pure (x0, y0, x0 + 3, y0 + 1)
 
-    zipWithM_
-      ( \(x0, y0, x1, y1) n -> do
-          rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
-          string x0 y0 1 (fromInteger n) (show n)
+    Termbox.render
+      ( mconcat
+          ( zipWith
+              ( \(x0, y0, x1, y1) n ->
+                  rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+                    <> string x0 y0 1 (fromInteger n) (show n)
+              )
+              rectangles
+              [0 .. 255]
+          )
       )
-      rectangles
-      [0 .. 255]
+      Termbox.NoCursor
 
-    Termbox.flush
     void Termbox.poll
 
-string :: Int -> Int -> Termbox.Attr -> Termbox.Attr -> [Char] -> IO ()
+string :: Int -> Int -> Termbox.Attr -> Termbox.Attr -> [Char] -> Termbox.Cells
 string x0 y fg bg =
-  zipWithM_
-    (\x c -> Termbox.set x y (Termbox.Cell c fg bg))
-    [x0 ..]
+  mconcat . zipWith (\x c -> Termbox.set x y (Termbox.Cell c fg bg)) [x0 ..]
 
-rectangle :: Int -> Int -> Int -> Int -> Termbox.Cell -> IO ()
+rectangle :: Int -> Int -> Int -> Int -> Termbox.Cell -> Termbox.Cells
 rectangle x0 y0 x1 y1 c =
-  for_ ((,) <$> [x0 .. x1] <*> [y0 .. y1]) $ \(x, y) ->
-    Termbox.set x y c
+  foldMap (\(x, y) -> Termbox.set x y c) ((,) <$> [x0 .. x1] <*> [y0 .. y1])

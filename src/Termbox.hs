@@ -1,10 +1,8 @@
 -- |
 -- A @termbox@ program is typically constructed as an infinite loop that:
 --
--- 1. 'clear's the terminal backbuffer.
--- 2. Renders the program state by 'set'ting individual pixels.
--- 3. 'flush'es the backbuffer to the terminal.
--- 4. 'poll's for an event to update the program state.
+-- 1. Renders a scene.
+-- 2. Polls for an event.
 --
 -- For example, this progam simply displays the number of keys pressed, and
 -- quits on @Esc@:
@@ -17,23 +15,21 @@
 --
 -- main :: IO ()
 -- main =
---   Termbox.'run_' (loop 0)
+--   Termbox.'run_' 'defaultInputMode' 'defaultOutputMode' (loop 0)
 --
 -- loop :: Int -> IO ()
 -- loop n = do
---   Termbox.'clear' mempty mempty
---   render n
---   Termbox.'flush'
+--   Termbox.'render' (cells n) Termbox.NoMouse
 --
 --   Termbox.'poll' >>= \\case
 --     Termbox.'EventKey' Termbox.'KeyEsc' _ -> pure ()
 --     _ -> loop (n+1)
 --
--- render :: Int -> IO ()
--- render n =
---   for_
---     (zip [0..] (show n))
+-- cells :: Int -> Termbox.'Cells'
+-- cells n =
+--   foldMap
 --     (\\(i, c) -> Termbox.'set' i 0 (Termbox.'Cell' c mempty mempty))
+--     (zip [0..] (show n))
 -- @
 --
 -- Other termbox features include cell attributes (style, color), cursor
@@ -48,17 +44,12 @@ module Termbox
 
     -- * Terminal contents
     set,
+    render,
     getCells,
-    clear,
-    flush,
-    Cell (..),
-
-    -- * Terminal size
     getSize,
-
-    -- * Cursor manipulation
-    setCursor,
-    hideCursor,
+    Cells,
+    Cell (..),
+    Cursor (..),
 
     -- * Event handling
     poll,
@@ -95,7 +86,6 @@ import Control.Monad ((>=>))
 import Data.Semigroup (Semigroup (..))
 import Termbox.Attr
   ( Attr,
-    attrToWord,
     black,
     blue,
     bold,
@@ -108,8 +98,9 @@ import Termbox.Attr
     white,
     yellow,
   )
-import Termbox.Cell (Cell (..), getCells, set)
-import Termbox.Cursor (hideCursor, setCursor)
+import Termbox.Cell (Cell (Cell), getCells)
+import Termbox.Cells (Cells (Cells), set)
+import Termbox.Cursor (Cursor (Cursor, NoCursor))
 import Termbox.Event (Event (..), PollError (..), poll)
 import Termbox.InputMode (InputMode (..), defaultInputMode, setInputMode)
 import Termbox.Internal
@@ -169,13 +160,13 @@ getSize :: IO (Int, Int)
 getSize =
   (,) <$> tb_width <*> tb_height
 
--- | Clear the back buffer with the given foreground and background attributes.
-clear :: Attr -> Attr -> IO ()
-clear fg bg = do
-  tb_set_clear_attributes (attrToWord fg) (attrToWord bg)
+-- | Render a scene.
+render :: Cells -> Cursor -> IO ()
+render (Cells cells) cursor = do
+  tb_set_clear_attributes 0 0
   tb_clear
-
--- | Synchronize the internal back buffer with the terminal.
-flush :: IO ()
-flush =
+  cells
+  case cursor of
+    Cursor col row -> tb_set_cursor col row
+    NoCursor -> tb_set_cursor tB_HIDE_CURSOR tB_HIDE_CURSOR
   tb_present

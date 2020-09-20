@@ -35,6 +35,7 @@ flag build-examples
 
 common component
   default-extensions:
+    GeneralizedNewtypeDeriving
     InstanceSigs
     LambdaCase
   default-language: Haskell2010
@@ -67,6 +68,7 @@ library
   other-modules:
     Termbox.Attr
     Termbox.Cell
+    Termbox.Cells
     Termbox.Cursor
     Termbox.Event
     Termbox.InputMode

@@ -2,7 +2,6 @@
 
 module Termbox.Cell
   ( Cell (..),
-    set,
     getCells,
   )
 where
@@ -50,11 +49,6 @@ instance Storable Cell where
     pokeByteOff ptr 0 (fromIntegral @Int @Word32 (ord ch))
     pokeByteOff ptr 4 (attrToWord fg)
     pokeByteOff ptr 6 (attrToWord bg)
-
--- | Set the cell at the given coordinates (column, then row).
-set :: Int -> Int -> Cell -> IO ()
-set x y (Cell ch fg bg) =
-  tb_change_cell x y (fromIntegral (ord ch)) (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's two-dimensional array of cells (indexed by row, then
 -- column).
