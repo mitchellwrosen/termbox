@@ -1,7 +1,7 @@
 cabal-version: 2.4
 
 name: termbox
-version: 0.2.0.1
+version: 0.3.0
 category: User Interfaces
 description:
   This package provides a thin wrapper around @termbox v1.1.2@, a simple C
