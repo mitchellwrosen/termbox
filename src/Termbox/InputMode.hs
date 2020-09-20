@@ -23,6 +23,7 @@ data InputMode
   | InputModeAlt MouseMode
   deriving (Eq, Ord, Show)
 
+-- | The default input mode (escape mode, no mouse).
 defaultInputMode :: InputMode
 defaultInputMode =
   InputModeEsc MouseModeNo

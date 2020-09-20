@@ -75,7 +75,6 @@ library
     Termbox.Key
     Termbox.Mouse
     Termbox.MouseMode
-    Termbox.OutputMode
 
 executable termbox-example-colors
   if !flag(build-examples)

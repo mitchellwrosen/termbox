@@ -76,13 +76,12 @@ module Termbox
     defaultInputMode,
     InputMode (..),
     MouseMode (..),
-    OutputMode (..),
-    defaultOutputMode,
   )
 where
 
 import Control.Exception
 import Control.Monad ((>=>))
+import Data.Functor (void)
 import Data.Semigroup (Semigroup (..))
 import Termbox.Attr
   ( Attr,
@@ -107,7 +106,6 @@ import Termbox.Internal
 import Termbox.Key (Key (..))
 import Termbox.Mouse (Mouse (..))
 import Termbox.MouseMode (MouseMode (..))
-import Termbox.OutputMode (OutputMode (..), defaultOutputMode, setOutputMode)
 import Prelude hiding (reverse)
 
 --------------------------------------------------------------------------------
@@ -124,8 +122,8 @@ data InitError
 instance Exception InitError
 
 -- | Run a @termbox@ program and restore the terminal state afterwards.
-run :: InputMode -> OutputMode -> IO a -> IO (Either InitError a)
-run inputMode outputMode action = do
+run :: InputMode -> IO a -> IO (Either InitError a)
+run inputMode action = do
   mask $ \unmask -> do
     initResult <- tb_init
     case () of
@@ -134,7 +132,7 @@ run inputMode outputMode action = do
           unmask
             ( do
                 setInputMode inputMode
-                setOutputMode outputMode
+                void (tb_select_output_mode tB_OUTPUT_256)
                 action
             )
             `onException` shutdown
@@ -151,9 +149,9 @@ run inputMode outputMode action = do
       tb_shutdown
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
-run_ :: InputMode -> OutputMode -> IO a -> IO a
-run_ inputMode outputMode =
-  run inputMode outputMode >=> either throwIO pure
+run_ :: InputMode -> IO a -> IO a
+run_ inputMode =
+  run inputMode >=> either throwIO pure
 
 -- | Get the terminal size (width, then height).
 getSize :: IO (Int, Int)

@@ -21,6 +21,7 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 
 ### Removed
 - Remove `getInputMode`, `setInputMode`, `getOutputMode`, `setOutputMode`, `getCursor`, `hideCursor`, `clear`, `flush`
+- Remove `OutputMode`
 - Remove build dependency on `c2hs`
 
 ## [0.2.0.1] - 2020-06-27
