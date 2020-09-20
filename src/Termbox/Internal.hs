@@ -345,3 +345,6 @@ foreign import ccall unsafe "tb_shutdown"
 
 foreign import ccall unsafe "tb_width"
   tb_width :: IO Int
+
+-- foreign import ccall unsafe "tb_cell_buffer"
+--   tb_cell_buffer :: IO (Ptr Cell)

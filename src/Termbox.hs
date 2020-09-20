@@ -16,15 +16,15 @@
 --
 -- main :: IO ()
 -- main =
---   Termbox.'run_' (loop 0)
+--   Termbox.'run' (\\_width _height render poll -> loop render poll 0)
 --
--- loop :: Int -> IO ()
--- loop n = do
---   Termbox.'render' (string (show n)) Termbox.'NoCursor'
+-- loop :: (Termbox.'Cells' -> Termbox.'Cursor' -> IO ()) -> IO Termbox.'Event' -> Int -> IO ()
+-- loop render poll n = do
+--   render (string (show n)) Termbox.'NoCursor'
 --
---   Termbox.'poll' >>= \\case
+--   poll >>= \\case
 --     Termbox.'EventKey' Termbox.'KeyEsc' -> pure ()
---     _ -> loop (n+1)
+--     _ -> loop render poll (n+1)
 --
 -- string :: Int -> Int -> String -> Termbox.'Cells'
 -- string col row =
@@ -38,20 +38,15 @@
 module Termbox
   ( -- * Initialization
     run,
-    run_,
     InitError (..),
 
     -- * Terminal contents
     set,
-    render,
-    getCells,
-    getSize,
     Cells,
     Cell (..),
     Cursor (..),
 
     -- * Event handling
-    poll,
     Event (..),
     Key (..),
     -- $key-aliases
@@ -69,6 +64,7 @@ module Termbox
     PollError (..),
 
     -- * Attributes
+    Attr,
     black,
     red,
     green,
@@ -80,12 +76,10 @@ module Termbox
     bold,
     underline,
     reverse,
-    Attr,
   )
 where
 
 import Control.Exception
-import Control.Monad ((>=>))
 import Data.Semigroup (Semigroup (..))
 import Termbox.Attr
   ( Attr,
@@ -101,9 +95,8 @@ import Termbox.Attr
     white,
     yellow,
   )
-import Termbox.Cell (Cell (Cell), getCells)
+import Termbox.Cell (Cell (Cell))
 import Termbox.Cells (Cells (Cells), set)
-import Termbox.Cursor (Cursor (Cursor, NoCursor))
 import Termbox.Event (Event (..), PollError (..), poll)
 import Termbox.Internal
 import Termbox.Key
@@ -122,6 +115,12 @@ import Termbox.Key
 import Termbox.Mouse (Mouse (..))
 import Prelude hiding (reverse)
 
+-- | A cursor.
+data Cursor
+  = -- | Column, then row
+    Cursor !Int !Int
+  | NoCursor
+
 -- $key-aliases
 -- In a few cases, distinct key sequences map to equivalent key events. The pattern synonyms below are provided for an
 -- alternate syntax in these cases, if desired.
@@ -136,7 +135,16 @@ data InitError
 instance Exception InitError
 
 -- | Run a @termbox@ program and restore the terminal state afterwards.
-run :: IO a -> IO (Either InitError a)
+--
+-- The function provided to @run@ is provided:
+--
+--   * The initial terminal width
+--   * The initial terminal height
+--   * An action that renders a scene
+--   * An action that polls for an event indefinitely
+--
+-- /Throws/: 'InitError'
+run :: (Int -> Int -> (Cells -> Cursor -> IO ()) -> IO Event -> IO a) -> IO a
 run action = do
   mask $ \unmask -> do
     initResult <- tb_init
@@ -147,32 +155,17 @@ run action = do
             ( do
                 _ <- tb_select_input_mode tB_INPUT_MOUSE
                 _ <- tb_select_output_mode tB_OUTPUT_256
-                action
+                width <- tb_width
+                height <- tb_height
+                action width height render poll
             )
             `onException` shutdown
         shutdown
-        pure (Right result)
-      _ | initResult == tB_EFAILED_TO_OPEN_TTY -> pure (Left FailedToOpenTTY)
-      _ | initResult == tB_EPIPE_TRAP_ERROR -> pure (Left PipeTrapError)
-      _ | initResult == tB_EUNSUPPORTED_TERMINAL -> pure (Left UnsupportedTerminal)
+        pure result
+      _ | initResult == tB_EFAILED_TO_OPEN_TTY -> throwIO FailedToOpenTTY
+      _ | initResult == tB_EPIPE_TRAP_ERROR -> throwIO PipeTrapError
+      _ | initResult == tB_EUNSUPPORTED_TERMINAL -> throwIO UnsupportedTerminal
       _ -> error ("termbox: unknown tb_init error " ++ show initResult)
-  where
-    shutdown :: IO ()
-    shutdown = do
-      _ <- tb_select_output_mode tB_OUTPUT_NORMAL
-      tb_shutdown
-
--- | Like 'run', but throws 'InitError's as @IO@ exceptions.
---
--- /Throws/: 'InitError'
-run_ :: IO a -> IO a
-run_ =
-  run >=> either throwIO pure
-
--- | Get the terminal size (width, then height).
-getSize :: IO (Int, Int)
-getSize =
-  (,) <$> tb_width <*> tb_height
 
 -- | Render a scene.
 render :: Cells -> Cursor -> IO ()
@@ -184,3 +177,8 @@ render (Cells cells) cursor = do
     Cursor col row -> tb_set_cursor col row
     NoCursor -> tb_set_cursor tB_HIDE_CURSOR tB_HIDE_CURSOR
   tb_present
+
+shutdown :: IO ()
+shutdown = do
+  _ <- tb_select_output_mode tB_OUTPUT_NORMAL
+  tb_shutdown

@@ -54,9 +54,7 @@ common component
 
 library
   import: component
-  build-depends:
-    array,
-    base ^>= 4.10 || ^>= 4.11 || ^>= 4.12 || ^>= 4.13 || ^>= 4.14
+  build-depends: base ^>= 4.10 || ^>= 4.11 || ^>= 4.12 || ^>= 4.13 || ^>= 4.14
   c-sources:
     cbits/termbox.c
     cbits/utf8.c
@@ -69,7 +67,6 @@ library
     Termbox.Attr
     Termbox.Cell
     Termbox.Cells
-    Termbox.Cursor
     Termbox.Event
     Termbox.Key
     Termbox.Mouse

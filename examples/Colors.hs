@@ -1,9 +1,9 @@
 import Data.Semigroup ((<>))
 import qualified Termbox
 
-main :: IO (Either Termbox.InitError ())
+main :: IO ()
 main =
-  Termbox.run $ do
+  Termbox.run $ \_w _h render poll -> do
     let rectangles :: [(Int, Int, Int, Int)]
         rectangles = do
           y0 <- [0, 2 ..]
@@ -26,8 +26,8 @@ main =
 
     let loop :: Maybe Termbox.Event -> IO ()
         loop lastEvent = do
-          Termbox.render (cells lastEvent) Termbox.NoCursor
-          Termbox.poll >>= \case
+          render (cells lastEvent) Termbox.NoCursor
+          poll >>= \case
             Termbox.EventKey Termbox.KeyEsc -> pure ()
             event -> loop (Just event)
 

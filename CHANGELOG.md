@@ -8,13 +8,12 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 ## Unreleased
 
 ### Added
-- Add `defaultInputMode`, `defaultOutputMode`
-- Add `Cells`, `Cursor`, `render`
-- Export `Termbox.Internal` module that (roughly) contains 1:1 C bindings
+- Add `Cells` and `Cursor` types
+- Export `Termbox.Internal` module that roughly corresponds to the C library
 
 ### Changed
-- Remove `HasCallStack` constraint from `getInputMode` and `getOutputMode`
-- Add `InputMode` and `OutputMode` arguments to `run`
+- Add a few arguments to the action provided to `run`
+- Make `run` throw `InitError`s as IO exceptions
 - Reset output mode to "normal" on shutdown to work around a small bug in termbox.c that retains the output mode across
   separate invocations of init/shutdown
 - Change type of `set` to construct a `Cells` rather than an `IO ()`
@@ -22,7 +21,7 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 
 ### Removed
 - Remove the alt modifier field from `KeyEvent`
-- Remove `setCursor`, `hideCursor`, `clear`, `flush`
+- Remove `setCursor`, `hideCursor`, `clear`, `flush`, `getCells`, `getSize`, `poll`, `run_`
 - Remove `InputMode`, `MouseMode`, and `OutputMode`, providing sane defaults instead
 - Remove build dependency on `c2hs`
 - Remove support for GHC < 8.2
