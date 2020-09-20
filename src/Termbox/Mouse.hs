@@ -4,7 +4,7 @@ module Termbox.Mouse
   )
 where
 
-import qualified Termbox.C
+import Termbox.C (TbKey (..))
 
 -- | A mouse event.
 data Mouse
@@ -16,13 +16,13 @@ data Mouse
   | MouseWheelUp
   deriving (Eq, Ord, Show)
 
--- | Parse a 'Mouse' from a 'Termbox.C.Key'.
-parseMouse :: Termbox.C.Key -> Mouse
+-- | Parse a 'Mouse' from a 'TbKey'.
+parseMouse :: TbKey -> Mouse
 parseMouse = \case
-  Termbox.C.KeyMouseLeft -> MouseLeft
-  Termbox.C.KeyMouseMiddle -> MouseMiddle
-  Termbox.C.KeyMouseRelease -> MouseRelease
-  Termbox.C.KeyMouseRight -> MouseRight
-  Termbox.C.KeyMouseWheelDown -> MouseWheelDown
-  Termbox.C.KeyMouseWheelUp -> MouseWheelUp
+  TbKeyMouseLeft -> MouseLeft
+  TbKeyMouseMiddle -> MouseMiddle
+  TbKeyMouseRelease -> MouseRelease
+  TbKeyMouseRight -> MouseRight
+  TbKeyMouseWheelDown -> MouseWheelDown
+  TbKeyMouseWheelUp -> MouseWheelUp
   key -> error ("termbox: unknown mouse " ++ show key)

@@ -4,7 +4,7 @@ module Termbox.Key
   )
 where
 
-import qualified Termbox.C
+import Termbox.C (TbKey (..))
 
 -- | A key event.
 data Key
@@ -78,74 +78,74 @@ data Key
   | KeyTab
   deriving (Eq, Ord, Show)
 
--- | Parse a 'Key' from a 'Termbox.C.Key'.
-parseKey :: Termbox.C.Key -> Key
+-- | Parse a 'Key' from a 'TbKey'.
+parseKey :: TbKey -> Key
 parseKey = \case
-  Termbox.C.KeyArrowDown -> KeyArrowDown
-  Termbox.C.KeyArrowLeft -> KeyArrowLeft
-  Termbox.C.KeyArrowRight -> KeyArrowRight
-  Termbox.C.KeyArrowUp -> KeyArrowUp
-  Termbox.C.KeyBackspace -> KeyBackspace
-  Termbox.C.KeyBackspace2 -> KeyBackspace2
-  Termbox.C.KeyCtrl2 -> KeyCtrl2
-  Termbox.C.KeyCtrl3 -> KeyCtrl3
-  Termbox.C.KeyCtrl4 -> KeyCtrl4
-  Termbox.C.KeyCtrl5 -> KeyCtrl5
-  Termbox.C.KeyCtrl6 -> KeyCtrl6
-  Termbox.C.KeyCtrl7 -> KeyCtrl7
-  Termbox.C.KeyCtrl8 -> KeyCtrl8
-  Termbox.C.KeyCtrlA -> KeyCtrlA
-  Termbox.C.KeyCtrlB -> KeyCtrlB
-  Termbox.C.KeyCtrlBackslash -> KeyCtrlBackslash
-  Termbox.C.KeyCtrlC -> KeyCtrlC
-  Termbox.C.KeyCtrlD -> KeyCtrlD
-  Termbox.C.KeyCtrlE -> KeyCtrlE
-  Termbox.C.KeyCtrlF -> KeyCtrlF
-  Termbox.C.KeyCtrlG -> KeyCtrlG
-  Termbox.C.KeyCtrlH -> KeyCtrlH
-  Termbox.C.KeyCtrlI -> KeyCtrlI
-  Termbox.C.KeyCtrlJ -> KeyCtrlJ
-  Termbox.C.KeyCtrlK -> KeyCtrlK
-  Termbox.C.KeyCtrlL -> KeyCtrlL
-  Termbox.C.KeyCtrlLsqBracket -> KeyCtrlLsqBracket
-  Termbox.C.KeyCtrlM -> KeyCtrlM
-  Termbox.C.KeyCtrlN -> KeyCtrlN
-  Termbox.C.KeyCtrlO -> KeyCtrlO
-  Termbox.C.KeyCtrlP -> KeyCtrlP
-  Termbox.C.KeyCtrlQ -> KeyCtrlQ
-  Termbox.C.KeyCtrlR -> KeyCtrlR
-  Termbox.C.KeyCtrlRsqBracket -> KeyCtrlRsqBracket
-  Termbox.C.KeyCtrlS -> KeyCtrlS
-  Termbox.C.KeyCtrlSlash -> KeyCtrlSlash
-  Termbox.C.KeyCtrlT -> KeyCtrlT
-  Termbox.C.KeyCtrlTilde -> KeyCtrlTilde
-  Termbox.C.KeyCtrlU -> KeyCtrlU
-  Termbox.C.KeyCtrlUnderscore -> KeyCtrlUnderscore
-  Termbox.C.KeyCtrlV -> KeyCtrlV
-  Termbox.C.KeyCtrlW -> KeyCtrlW
-  Termbox.C.KeyCtrlX -> KeyCtrlX
-  Termbox.C.KeyCtrlY -> KeyCtrlY
-  Termbox.C.KeyCtrlZ -> KeyCtrlZ
-  Termbox.C.KeyDelete -> KeyDelete
-  Termbox.C.KeyEnd -> KeyEnd
-  Termbox.C.KeyEnter -> KeyEnter
-  Termbox.C.KeyEsc -> KeyEsc
-  Termbox.C.KeyF1 -> KeyF1
-  Termbox.C.KeyF10 -> KeyF10
-  Termbox.C.KeyF11 -> KeyF11
-  Termbox.C.KeyF12 -> KeyF12
-  Termbox.C.KeyF2 -> KeyF2
-  Termbox.C.KeyF3 -> KeyF3
-  Termbox.C.KeyF4 -> KeyF4
-  Termbox.C.KeyF5 -> KeyF5
-  Termbox.C.KeyF6 -> KeyF6
-  Termbox.C.KeyF7 -> KeyF7
-  Termbox.C.KeyF8 -> KeyF8
-  Termbox.C.KeyF9 -> KeyF9
-  Termbox.C.KeyHome -> KeyHome
-  Termbox.C.KeyInsert -> KeyInsert
-  Termbox.C.KeyPageDn -> KeyPageDn
-  Termbox.C.KeyPageUp -> KeyPageUp
-  Termbox.C.KeySpace -> KeySpace
-  Termbox.C.KeyTab -> KeyTab
+  TbKeyArrowDown -> KeyArrowDown
+  TbKeyArrowLeft -> KeyArrowLeft
+  TbKeyArrowRight -> KeyArrowRight
+  TbKeyArrowUp -> KeyArrowUp
+  TbKeyBackspace -> KeyBackspace
+  TbKeyBackspace2 -> KeyBackspace2
+  TbKeyCtrl2 -> KeyCtrl2
+  TbKeyCtrl3 -> KeyCtrl3
+  TbKeyCtrl4 -> KeyCtrl4
+  TbKeyCtrl5 -> KeyCtrl5
+  TbKeyCtrl6 -> KeyCtrl6
+  TbKeyCtrl7 -> KeyCtrl7
+  TbKeyCtrl8 -> KeyCtrl8
+  TbKeyCtrlA -> KeyCtrlA
+  TbKeyCtrlB -> KeyCtrlB
+  TbKeyCtrlBackslash -> KeyCtrlBackslash
+  TbKeyCtrlC -> KeyCtrlC
+  TbKeyCtrlD -> KeyCtrlD
+  TbKeyCtrlE -> KeyCtrlE
+  TbKeyCtrlF -> KeyCtrlF
+  TbKeyCtrlG -> KeyCtrlG
+  TbKeyCtrlH -> KeyCtrlH
+  TbKeyCtrlI -> KeyCtrlI
+  TbKeyCtrlJ -> KeyCtrlJ
+  TbKeyCtrlK -> KeyCtrlK
+  TbKeyCtrlL -> KeyCtrlL
+  TbKeyCtrlLsqBracket -> KeyCtrlLsqBracket
+  TbKeyCtrlM -> KeyCtrlM
+  TbKeyCtrlN -> KeyCtrlN
+  TbKeyCtrlO -> KeyCtrlO
+  TbKeyCtrlP -> KeyCtrlP
+  TbKeyCtrlQ -> KeyCtrlQ
+  TbKeyCtrlR -> KeyCtrlR
+  TbKeyCtrlRsqBracket -> KeyCtrlRsqBracket
+  TbKeyCtrlS -> KeyCtrlS
+  TbKeyCtrlSlash -> KeyCtrlSlash
+  TbKeyCtrlT -> KeyCtrlT
+  TbKeyCtrlTilde -> KeyCtrlTilde
+  TbKeyCtrlU -> KeyCtrlU
+  TbKeyCtrlUnderscore -> KeyCtrlUnderscore
+  TbKeyCtrlV -> KeyCtrlV
+  TbKeyCtrlW -> KeyCtrlW
+  TbKeyCtrlX -> KeyCtrlX
+  TbKeyCtrlY -> KeyCtrlY
+  TbKeyCtrlZ -> KeyCtrlZ
+  TbKeyDelete -> KeyDelete
+  TbKeyEnd -> KeyEnd
+  TbKeyEnter -> KeyEnter
+  TbKeyEsc -> KeyEsc
+  TbKeyF1 -> KeyF1
+  TbKeyF10 -> KeyF10
+  TbKeyF11 -> KeyF11
+  TbKeyF12 -> KeyF12
+  TbKeyF2 -> KeyF2
+  TbKeyF3 -> KeyF3
+  TbKeyF4 -> KeyF4
+  TbKeyF5 -> KeyF5
+  TbKeyF6 -> KeyF6
+  TbKeyF7 -> KeyF7
+  TbKeyF8 -> KeyF8
+  TbKeyF9 -> KeyF9
+  TbKeyHome -> KeyHome
+  TbKeyInsert -> KeyInsert
+  TbKeyPageDn -> KeyPageDn
+  TbKeyPageUp -> KeyPageUp
+  TbKeySpace -> KeySpace
+  TbKeyTab -> KeyTab
   key -> error ("termbox: unknown key " ++ show key)

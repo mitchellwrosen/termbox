@@ -110,7 +110,7 @@ import Termbox.Attr
     white,
     yellow,
   )
-import qualified Termbox.C
+import Termbox.C
 import Termbox.Cell (Cell (..), getCells, set)
 import Termbox.Cursor (hideCursor, setCursor)
 import Termbox.Event (Event (..), PollError (..), poll)
@@ -138,14 +138,14 @@ instance Exception InitError
 run :: IO a -> IO (Either InitError a)
 run action =
   mask $ \unmask ->
-    Termbox.C.init >>= \case
-      Termbox.C.InitOk -> do
-        result <- unmask action `onException` Termbox.C.shutdown
-        Termbox.C.shutdown
+    tb_init >>= \case
+      TbInitOk -> do
+        result <- unmask action `onException` tb_shutdown
+        tb_shutdown
         pure (Right result)
-      Termbox.C.FailedToOpenTTY -> pure (Left FailedToOpenTTY)
-      Termbox.C.PipeTrapError -> pure (Left PipeTrapError)
-      Termbox.C.UnsupportedTerminal -> pure (Left UnsupportedTerminal)
+      TbFailedToOpenTTY -> pure (Left FailedToOpenTTY)
+      TbPipeTrapError -> pure (Left PipeTrapError)
+      TbUnsupportedTerminal -> pure (Left UnsupportedTerminal)
 
 -- | Like 'run', but throws 'InitError's as @IO@ exceptions.
 run_ :: IO a -> IO a
@@ -155,15 +155,15 @@ run_ =
 -- | Get the terminal size (width, then height).
 getSize :: IO (Int, Int)
 getSize =
-  (,) <$> Termbox.C.width <*> Termbox.C.height
+  (,) <$> tb_width <*> tb_height
 
 -- | Clear the back buffer with the given foreground and background attributes.
 clear :: Attr -> Attr -> IO ()
 clear fg bg = do
-  Termbox.C.setClearAttributes (attrToWord fg) (attrToWord bg)
-  Termbox.C.clear
+  tb_set_clear_attributes (attrToWord fg) (attrToWord bg)
+  tb_clear
 
 -- | Synchronize the internal back buffer with the terminal.
 flush :: IO ()
 flush =
-  Termbox.C.present
+  tb_present

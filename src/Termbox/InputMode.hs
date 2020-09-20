@@ -7,7 +7,7 @@ where
 
 import Data.Bits ((.|.))
 import Data.Functor (void)
-import qualified Termbox.C
+import Termbox.C
 import Termbox.MouseMode (MouseMode (..))
 
 -- | The input modes.
@@ -26,7 +26,7 @@ data InputMode
 -- | Get the current input mode.
 getInputMode :: IO InputMode
 getInputMode =
-  f <$> Termbox.C.selectInputMode Termbox.C._INPUT_CURRENT
+  f <$> tb_select_input_mode tB_INPUT_CURRENT
   where
     f :: Int -> InputMode
     f = \case
@@ -39,11 +39,11 @@ getInputMode =
 -- | Set the input mode.
 setInputMode :: InputMode -> IO ()
 setInputMode =
-  void . Termbox.C.selectInputMode . f
+  void . tb_select_input_mode . f
   where
     f :: InputMode -> Int
     f = \case
-      InputModeEsc MouseModeNo -> Termbox.C._INPUT_ESC
-      InputModeEsc MouseModeYes -> Termbox.C._INPUT_ESC .|. Termbox.C._INPUT_MOUSE
-      InputModeAlt MouseModeNo -> Termbox.C._INPUT_ALT
-      InputModeAlt MouseModeYes -> Termbox.C._INPUT_ALT .|. Termbox.C._INPUT_MOUSE
+      InputModeEsc MouseModeNo -> Termbox.C.tB_INPUT_ESC
+      InputModeEsc MouseModeYes -> Termbox.C.tB_INPUT_ESC .|. Termbox.C.tB_INPUT_MOUSE
+      InputModeAlt MouseModeNo -> Termbox.C.tB_INPUT_ALT
+      InputModeAlt MouseModeYes -> Termbox.C.tB_INPUT_ALT .|. Termbox.C.tB_INPUT_MOUSE

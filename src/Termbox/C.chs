@@ -18,145 +18,145 @@ import Prelude hiding (mod)
 -- Constants
 --------------------------------------------------------------------------------
 
-_INPUT_CURRENT, _INPUT_ESC, _INPUT_ALT, _INPUT_MOUSE :: Int
-_HIDE_CURSOR :: Int
-_BOLD, _UNDERLINE, _REVERSE :: Word16
-_DEFAULT, _BLACK, _RED, _GREEN, _YELLOW, _BLUE, _MAGENTA, _CYAN, _WHITE :: Word16
+tB_INPUT_CURRENT, tB_INPUT_ESC, tB_INPUT_ALT, tB_INPUT_MOUSE :: Int
+tB_HIDE_CURSOR :: Int
+tB_BOLD, tB_UNDERLINE, tB_REVERSE :: Word16
+tB_DEFAULT, tB_BLACK, tB_RED, tB_GREEN, tB_YELLOW, tB_BLUE, tB_MAGENTA, tB_CYAN, tB_WHITE :: Word16
 
-_INPUT_CURRENT = {# const TB_INPUT_CURRENT #}
-_INPUT_ESC     = {# const TB_INPUT_ESC     #}
-_INPUT_ALT     = {# const TB_INPUT_ALT     #}
-_INPUT_MOUSE   = {# const TB_INPUT_MOUSE   #}
+tB_INPUT_CURRENT = {# const TB_INPUT_CURRENT #}
+tB_INPUT_ESC     = {# const TB_INPUT_ESC     #}
+tB_INPUT_ALT     = {# const TB_INPUT_ALT     #}
+tB_INPUT_MOUSE   = {# const TB_INPUT_MOUSE   #}
 
-_HIDE_CURSOR   = {# const TB_HIDE_CURSOR #}
+tB_HIDE_CURSOR   = {# const TB_HIDE_CURSOR #}
 
-_BOLD          = {# const TB_BOLD #}
-_UNDERLINE     = {# const TB_UNDERLINE #}
-_REVERSE       = {# const TB_REVERSE #}
+tB_BOLD          = {# const TB_BOLD #}
+tB_UNDERLINE     = {# const TB_UNDERLINE #}
+tB_REVERSE       = {# const TB_REVERSE #}
 
-_DEFAULT       = {# const TB_DEFAULT #}
-_BLACK         = {# const TB_BLACK #}
-_RED           = {# const TB_RED #}
-_GREEN         = {# const TB_GREEN #}
-_YELLOW        = {# const TB_YELLOW #}
-_BLUE          = {# const TB_BLUE #}
-_MAGENTA       = {# const TB_MAGENTA #}
-_CYAN          = {# const TB_CYAN #}
-_WHITE         = {# const TB_WHITE #}
+tB_DEFAULT       = {# const TB_DEFAULT #}
+tB_BLACK         = {# const TB_BLACK #}
+tB_RED           = {# const TB_RED #}
+tB_GREEN         = {# const TB_GREEN #}
+tB_YELLOW        = {# const TB_YELLOW #}
+tB_BLUE          = {# const TB_BLUE #}
+tB_MAGENTA       = {# const TB_MAGENTA #}
+tB_CYAN          = {# const TB_CYAN #}
+tB_WHITE         = {# const TB_WHITE #}
 
 --------------------------------------------------------------------------------
 -- Enums
 --------------------------------------------------------------------------------
 
 {#
-  enum define EventType
-    { TB_EVENT_KEY as EventKey
-    , TB_EVENT_RESIZE as EventResize
-    , TB_EVENT_MOUSE as EventMouse
+  enum define TbEventType
+    { TB_EVENT_KEY as TbEventTypeKey
+    , TB_EVENT_RESIZE as TbEventTypeResize
+    , TB_EVENT_MOUSE as TbEventTypeMouse
     }
 #}
 
 {#
-  enum define InitResult
-    { 0 as InitOk
-    , TB_EUNSUPPORTED_TERMINAL as UnsupportedTerminal
-    , TB_EFAILED_TO_OPEN_TTY as FailedToOpenTTY
-    , TB_EPIPE_TRAP_ERROR as PipeTrapError
+  enum define TbInitResult
+    { 0 as TbInitOk
+    , TB_EUNSUPPORTED_TERMINAL as TbUnsupportedTerminal
+    , TB_EFAILED_TO_OPEN_TTY as TbFailedToOpenTTY
+    , TB_EPIPE_TRAP_ERROR as TbPipeTrapError
     }
 #}
 
 {#
-  enum define Key
-    { TB_KEY_F1 as KeyF1
-    , TB_KEY_F2 as KeyF2
-    , TB_KEY_F3 as KeyF3
-    , TB_KEY_F4 as KeyF4
-    , TB_KEY_F5 as KeyF5
-    , TB_KEY_F6 as KeyF6
-    , TB_KEY_F7 as KeyF7
-    , TB_KEY_F8 as KeyF8
-    , TB_KEY_F9 as KeyF9
-    , TB_KEY_F10 as KeyF10
-    , TB_KEY_F11 as KeyF11
-    , TB_KEY_F12 as KeyF12
-    , TB_KEY_INSERT as KeyInsert
-    , TB_KEY_DELETE as KeyDelete
-    , TB_KEY_HOME as KeyHome
-    , TB_KEY_END as KeyEnd
-    , TB_KEY_PGUP as KeyPageUp
-    , TB_KEY_PGDN as KeyPageDn
-    , TB_KEY_ARROW_UP as KeyArrowUp
-    , TB_KEY_ARROW_DOWN as KeyArrowDown
-    , TB_KEY_ARROW_LEFT as KeyArrowLeft
-    , TB_KEY_ARROW_RIGHT as KeyArrowRight
-    , TB_KEY_MOUSE_LEFT as KeyMouseLeft
-    , TB_KEY_MOUSE_RIGHT as KeyMouseRight
-    , TB_KEY_MOUSE_MIDDLE as KeyMouseMiddle
-    , TB_KEY_MOUSE_RELEASE as KeyMouseRelease
-    , TB_KEY_MOUSE_WHEEL_UP as KeyMouseWheelUp
-    , TB_KEY_MOUSE_WHEEL_DOWN as KeyMouseWheelDown
-    , TB_KEY_CTRL_TILDE as KeyCtrlTilde
-    , TB_KEY_CTRL_2 as KeyCtrl2
-    , TB_KEY_CTRL_A as KeyCtrlA
-    , TB_KEY_CTRL_B as KeyCtrlB
-    , TB_KEY_CTRL_C as KeyCtrlC
-    , TB_KEY_CTRL_D as KeyCtrlD
-    , TB_KEY_CTRL_E as KeyCtrlE
-    , TB_KEY_CTRL_F as KeyCtrlF
-    , TB_KEY_CTRL_G as KeyCtrlG
-    , TB_KEY_BACKSPACE as KeyBackspace
-    , TB_KEY_CTRL_H as KeyCtrlH
-    , TB_KEY_TAB as KeyTab
-    , TB_KEY_CTRL_I as KeyCtrlI
-    , TB_KEY_CTRL_J as KeyCtrlJ
-    , TB_KEY_CTRL_K as KeyCtrlK
-    , TB_KEY_CTRL_L as KeyCtrlL
-    , TB_KEY_ENTER as KeyEnter
-    , TB_KEY_CTRL_M as KeyCtrlM
-    , TB_KEY_CTRL_N as KeyCtrlN
-    , TB_KEY_CTRL_O as KeyCtrlO
-    , TB_KEY_CTRL_P as KeyCtrlP
-    , TB_KEY_CTRL_Q as KeyCtrlQ
-    , TB_KEY_CTRL_R as KeyCtrlR
-    , TB_KEY_CTRL_S as KeyCtrlS
-    , TB_KEY_CTRL_T as KeyCtrlT
-    , TB_KEY_CTRL_U as KeyCtrlU
-    , TB_KEY_CTRL_V as KeyCtrlV
-    , TB_KEY_CTRL_W as KeyCtrlW
-    , TB_KEY_CTRL_X as KeyCtrlX
-    , TB_KEY_CTRL_Y as KeyCtrlY
-    , TB_KEY_CTRL_Z as KeyCtrlZ
-    , TB_KEY_ESC as KeyEsc
-    , TB_KEY_CTRL_LSQ_BRACKET as KeyCtrlLsqBracket
-    , TB_KEY_CTRL_3 as KeyCtrl3
-    , TB_KEY_CTRL_4 as KeyCtrl4
-    , TB_KEY_CTRL_BACKSLASH as KeyCtrlBackslash
-    , TB_KEY_CTRL_5 as KeyCtrl5
-    , TB_KEY_CTRL_RSQ_BRACKET as KeyCtrlRsqBracket
-    , TB_KEY_CTRL_6 as KeyCtrl6
-    , TB_KEY_CTRL_7 as KeyCtrl7
-    , TB_KEY_CTRL_SLASH as KeyCtrlSlash
-    , TB_KEY_CTRL_UNDERSCORE as KeyCtrlUnderscore
-    , TB_KEY_SPACE as KeySpace
-    , TB_KEY_BACKSPACE2 as KeyBackspace2
-    , TB_KEY_CTRL_8 as KeyCtrl8
+  enum define TbKey
+    { TB_KEY_F1 as TbKeyF1
+    , TB_KEY_F2 as TbKeyF2
+    , TB_KEY_F3 as TbKeyF3
+    , TB_KEY_F4 as TbKeyF4
+    , TB_KEY_F5 as TbKeyF5
+    , TB_KEY_F6 as TbKeyF6
+    , TB_KEY_F7 as TbKeyF7
+    , TB_KEY_F8 as TbKeyF8
+    , TB_KEY_F9 as TbKeyF9
+    , TB_KEY_F10 as TbKeyF10
+    , TB_KEY_F11 as TbKeyF11
+    , TB_KEY_F12 as TbKeyF12
+    , TB_KEY_INSERT as TbKeyInsert
+    , TB_KEY_DELETE as TbKeyDelete
+    , TB_KEY_HOME as TbKeyHome
+    , TB_KEY_END as TbKeyEnd
+    , TB_KEY_PGUP as TbKeyPageUp
+    , TB_KEY_PGDN as TbKeyPageDn
+    , TB_KEY_ARROW_UP as TbKeyArrowUp
+    , TB_KEY_ARROW_DOWN as TbKeyArrowDown
+    , TB_KEY_ARROW_LEFT as TbKeyArrowLeft
+    , TB_KEY_ARROW_RIGHT as TbKeyArrowRight
+    , TB_KEY_MOUSE_LEFT as TbKeyMouseLeft
+    , TB_KEY_MOUSE_RIGHT as TbKeyMouseRight
+    , TB_KEY_MOUSE_MIDDLE as TbKeyMouseMiddle
+    , TB_KEY_MOUSE_RELEASE as TbKeyMouseRelease
+    , TB_KEY_MOUSE_WHEEL_UP as TbKeyMouseWheelUp
+    , TB_KEY_MOUSE_WHEEL_DOWN as TbKeyMouseWheelDown
+    , TB_KEY_CTRL_TILDE as TbKeyCtrlTilde
+    , TB_KEY_CTRL_2 as TbKeyCtrl2
+    , TB_KEY_CTRL_A as TbKeyCtrlA
+    , TB_KEY_CTRL_B as TbKeyCtrlB
+    , TB_KEY_CTRL_C as TbKeyCtrlC
+    , TB_KEY_CTRL_D as TbKeyCtrlD
+    , TB_KEY_CTRL_E as TbKeyCtrlE
+    , TB_KEY_CTRL_F as TbKeyCtrlF
+    , TB_KEY_CTRL_G as TbKeyCtrlG
+    , TB_KEY_BACKSPACE as TbKeyBackspace
+    , TB_KEY_CTRL_H as TbKeyCtrlH
+    , TB_KEY_TAB as TbKeyTab
+    , TB_KEY_CTRL_I as TbKeyCtrlI
+    , TB_KEY_CTRL_J as TbKeyCtrlJ
+    , TB_KEY_CTRL_K as TbKeyCtrlK
+    , TB_KEY_CTRL_L as TbKeyCtrlL
+    , TB_KEY_ENTER as TbKeyEnter
+    , TB_KEY_CTRL_M as TbKeyCtrlM
+    , TB_KEY_CTRL_N as TbKeyCtrlN
+    , TB_KEY_CTRL_O as TbKeyCtrlO
+    , TB_KEY_CTRL_P as TbKeyCtrlP
+    , TB_KEY_CTRL_Q as TbKeyCtrlQ
+    , TB_KEY_CTRL_R as TbKeyCtrlR
+    , TB_KEY_CTRL_S as TbKeyCtrlS
+    , TB_KEY_CTRL_T as TbKeyCtrlT
+    , TB_KEY_CTRL_U as TbKeyCtrlU
+    , TB_KEY_CTRL_V as TbKeyCtrlV
+    , TB_KEY_CTRL_W as TbKeyCtrlW
+    , TB_KEY_CTRL_X as TbKeyCtrlX
+    , TB_KEY_CTRL_Y as TbKeyCtrlY
+    , TB_KEY_CTRL_Z as TbKeyCtrlZ
+    , TB_KEY_ESC as TbKeyEsc
+    , TB_KEY_CTRL_LSQ_BRACKET as TbKeyCtrlLsqBracket
+    , TB_KEY_CTRL_3 as TbKeyCtrl3
+    , TB_KEY_CTRL_4 as TbKeyCtrl4
+    , TB_KEY_CTRL_BACKSLASH as TbKeyCtrlBackslash
+    , TB_KEY_CTRL_5 as TbKeyCtrl5
+    , TB_KEY_CTRL_RSQ_BRACKET as TbKeyCtrlRsqBracket
+    , TB_KEY_CTRL_6 as TbKeyCtrl6
+    , TB_KEY_CTRL_7 as TbKeyCtrl7
+    , TB_KEY_CTRL_SLASH as TbKeyCtrlSlash
+    , TB_KEY_CTRL_UNDERSCORE as TbKeyCtrlUnderscore
+    , TB_KEY_SPACE as TbKeySpace
+    , TB_KEY_BACKSPACE2 as TbKeyBackspace2
+    , TB_KEY_CTRL_8 as TbKeyCtrl8
     } deriving (Show)
 #}
 
 {#
-  enum define Mod
-    { 0 as ModNone
-    , TB_MOD_ALT as ModAlt
+  enum define TbMod
+    { 0 as TbModNone
+    , TB_MOD_ALT as TbModAlt
     }
 #}
 
 {#
-  enum define OutputMode
-    { TB_OUTPUT_CURRENT as OutputModeCurrent
-    , TB_OUTPUT_NORMAL as OutputModeNormal
-    , TB_OUTPUT_256 as OutputMode256
-    , TB_OUTPUT_216 as OutputMode216
-    , TB_OUTPUT_GRAYSCALE as OutputModeGrayscale
+  enum define TbOutputMode
+    { TB_OUTPUT_CURRENT as TbOutputModeCurrent
+    , TB_OUTPUT_NORMAL as TbOutputModeNormal
+    , TB_OUTPUT_256 as TbOutputMode256
+    , TB_OUTPUT_216 as TbOutputMode216
+    , TB_OUTPUT_GRAYSCALE as TbOutputModeGrayscale
     }
 #}
 
@@ -196,21 +196,21 @@ setCellBg :: Ptr a -> Word16 -> IO ()
 setCellBg p =
   {# set tb_cell.bg #} p . fromIntegral
 
-data Event
-  = Event !EventType Mod Key Char Int Int Int Int
+data TbEvent
+  = TbEvent !TbEventType TbMod TbKey Char Int Int Int Int
 
-instance Storable Event where
-  sizeOf :: Event -> Int
+instance Storable TbEvent where
+  sizeOf :: TbEvent -> Int
   sizeOf _ =
     {# sizeof tb_event #}
 
-  alignment :: Event -> Int
+  alignment :: TbEvent -> Int
   alignment _ =
     {# alignof tb_event #}
 
-  peek :: Ptr Event -> IO Event
+  peek :: Ptr TbEvent -> IO TbEvent
   peek p =
-    Event
+    TbEvent
       <$> ((toEnum . fromIntegral) <$> {# get tb_event->type #} p)
       <*> ((toEnum . fromIntegral) <$> {# get tb_event->mod #} p)
       <*> ((toEnum . fromIntegral) <$> {# get tb_event->key #} p)
@@ -220,8 +220,8 @@ instance Storable Event where
       <*> (fromIntegral <$> {# get tb_event->x #} p)
       <*> (fromIntegral <$> {# get tb_event->y #} p)
 
-  poke :: Ptr Event -> Event -> IO ()
-  poke p (Event typ mod key ch w h x y) = do
+  poke :: Ptr TbEvent -> TbEvent -> IO ()
+  poke p (TbEvent typ mod key ch w h x y) = do
     {# set tb_event.type #} p (fromIntegral (fromEnum typ))
     {# set tb_event.mod #} p (fromIntegral (fromEnum mod))
     {# set tb_event.key #} p (fromIntegral (fromEnum key))
@@ -231,74 +231,74 @@ instance Storable Event where
     {# set tb_event.x #} p (fromIntegral x)
     {# set tb_event.y #} p (fromIntegral y)
 
-{# pointer *tb_event as EventPtr -> Event #}
+{# pointer *tb_event as TbEventPtr -> TbEvent #}
 
 --------------------------------------------------------------------------------
 -- Functions
 --------------------------------------------------------------------------------
 
 {#
-  fun tb_change_cell as changeCell
+  fun tb_change_cell
     { `Int', `Int', charToUInt `Char', `Word16', `Word16' } -> `()'
 #}
 
 {#
-  fun tb_clear as clear
+  fun tb_clear
     { } -> `()'
 #}
 
 {#
-  fun tb_height as height
+  fun tb_height
     { } -> `Int'
 #}
 
 {#
-  fun tb_init as init
-    { } -> `InitResult'
+  fun tb_init
+    { } -> `TbInitResult'
 #}
 
 {#
-  fun tb_peek_event as peekEvent
-    { `EventPtr', `Int' } -> `Int'
+  fun tb_peek_event
+    { `TbEventPtr', `Int' } -> `Int'
 #}
 
 {#
-  fun tb_poll_event as pollEvent
-    { `EventPtr' } -> `Int'
+  fun tb_poll_event
+    { `TbEventPtr' } -> `Int'
 #}
 
 {#
-  fun tb_present as present
+  fun tb_present
     { } -> `()'
 #}
 
 {#
-  fun tb_select_input_mode as selectInputMode
+  fun tb_select_input_mode
     { `Int' } -> `Int'
 #}
 
 {#
-  fun tb_select_output_mode as selectOutputMode
-    { `OutputMode' } -> `OutputMode'
+  fun tb_select_output_mode
+    { `TbOutputMode' } -> `TbOutputMode'
 #}
 
 {#
-  fun tb_set_clear_attributes as setClearAttributes
+  fun tb_set_clear_attributes
     { `Word16', `Word16' } -> `()'
 #}
 
 {#
-  fun tb_set_cursor as setCursor
+  fun tb_set_cursor
     { `Int', `Int' } -> `()'
 #}
 
 {#
-  fun tb_shutdown as shutdown
+  fun tb_shutdown
     { } -> `()'
 #}
 
 {#
-  fun tb_width as width
+  fun tb_width
     { } -> `Int'
 #}
 

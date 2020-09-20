@@ -19,7 +19,7 @@ where
 
 import Data.Bits ((.&.), (.|.))
 import Data.Word (Word16)
-import qualified Termbox.C
+import Termbox.C
 import Prelude hiding (reverse)
 
 -- | A cell attribute, which includes its color, and whether or not it is
@@ -35,7 +35,7 @@ data Attr
 instance Monoid Attr where
   mempty :: Attr
   mempty =
-    Attr Termbox.C._DEFAULT 0
+    Attr tB_DEFAULT 0
 
   mappend :: Attr -> Attr -> Attr
   mappend =
@@ -71,54 +71,54 @@ attrToWord (Attr x y) =
 -- | @black = 1@.
 black :: Attr
 black =
-  Attr Termbox.C._BLACK 0
+  Attr tB_BLACK 0
 
 -- | @red = 2@.
 red :: Attr
 red =
-  Attr Termbox.C._RED 0
+  Attr tB_RED 0
 
 -- | @green = 3@.
 green :: Attr
 green =
-  Attr Termbox.C._GREEN 0
+  Attr tB_GREEN 0
 
 -- | @yellow = 4@.
 yellow :: Attr
 yellow =
-  Attr Termbox.C._YELLOW 0
+  Attr tB_YELLOW 0
 
 -- | @blue = 5@.
 blue :: Attr
 blue =
-  Attr Termbox.C._BLUE 0
+  Attr tB_BLUE 0
 
 -- | @magenta = 6@.
 magenta :: Attr
 magenta =
-  Attr Termbox.C._MAGENTA 0
+  Attr tB_MAGENTA 0
 
 -- | @cyan = 7@.
 cyan :: Attr
 cyan =
-  Attr Termbox.C._CYAN 0
+  Attr tB_CYAN 0
 
 -- | @white = 8@.
 white :: Attr
 white =
-  Attr Termbox.C._WHITE 0
+  Attr tB_WHITE 0
 
 -- | Bold modifier attribute.
 bold :: Attr
 bold =
-  Attr Termbox.C._DEFAULT Termbox.C._BOLD
+  Attr tB_DEFAULT tB_BOLD
 
 -- | Underline modifier attribute.
 underline :: Attr
 underline =
-  Attr Termbox.C._DEFAULT Termbox.C._UNDERLINE
+  Attr tB_DEFAULT tB_UNDERLINE
 
 -- | Reverse modifier attribute.
 reverse :: Attr
 reverse =
-  Attr Termbox.C._DEFAULT Termbox.C._REVERSE
+  Attr tB_DEFAULT tB_REVERSE

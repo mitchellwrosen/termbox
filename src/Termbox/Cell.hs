@@ -14,6 +14,7 @@ import Foreign.Ptr (Ptr)
 import Foreign.Storable
 import Termbox.Attr (Attr, attrToWord, wordToAttr)
 import qualified Termbox.C
+import Termbox.C (tb_change_cell, tb_height, tb_width)
 
 -- | A 'Cell' contains a character, foreground attribute, and background
 -- attribute.
@@ -50,23 +51,17 @@ instance Storable Cell where
 -- | Set the cell at the given coordinates (column, then row).
 set :: Int -> Int -> Cell -> IO ()
 set x y (Cell ch fg bg) =
-  Termbox.C.changeCell x y ch (attrToWord fg) (attrToWord bg)
+  tb_change_cell x y ch (attrToWord fg) (attrToWord bg)
 
 -- | Get the terminal's two-dimensional array of cells (indexed by row, then
 -- column).
 getCells :: IO (Array (Int, Int) Cell)
 getCells =
-  join
-    ( mkbuffer
-        <$> (tb_cell_buffer >>= newForeignPtr_)
-        <*> Termbox.C.width
-        <*> Termbox.C.height
-    )
+  join (mkbuffer <$> (tb_cell_buffer >>= newForeignPtr_) <*> tb_width <*> tb_height)
   where
     mkbuffer :: ForeignPtr Cell -> Int -> Int -> IO (Array (Int, Int) Cell)
     mkbuffer buff w h =
-      Array.freeze
-        =<< Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h -1, w -1))
+      Array.freeze =<< Array.unsafeForeignPtrToStorableArray buff ((0, 0), (h -1, w -1))
 
 foreign import ccall safe "termbox.h tb_cell_buffer"
   tb_cell_buffer :: IO (Ptr Cell)

@@ -9,7 +9,7 @@ import Control.Exception (Exception, throwIO)
 import Data.Semigroup (Semigroup (..))
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Storable (peek)
-import qualified Termbox.C
+import Termbox.C
 import Termbox.Key (Key (KeyChar), parseKey)
 import Termbox.Mouse (Mouse, parseMouse)
 import Prelude hiding (mod)
@@ -38,7 +38,7 @@ data Event
 poll :: IO Event
 poll =
   alloca $ \ptr ->
-    Termbox.C.pollEvent ptr >>= \case
+    tb_poll_event ptr >>= \case
       -1 -> throwIO PollError
       _ -> parseEvent <$> peek ptr
 
@@ -50,18 +50,18 @@ data PollError
 
 instance Exception PollError
 
--- | Parse an 'Event' from a 'Termbox.C.Event'.
-parseEvent :: Termbox.C.Event -> Event
+-- | Parse an 'Event' from a 'TbEvent'.
+parseEvent :: TbEvent -> Event
 parseEvent = \case
-  Termbox.C.Event Termbox.C.EventKey mod key ch _ _ _ _ ->
+  TbEvent TbEventTypeKey mod key ch _ _ _ _ ->
     EventKey
       ( case ch of
           '\0' -> parseKey key
           _ -> KeyChar ch
       )
       ( case mod of
-          Termbox.C.ModAlt -> True
+          TbModAlt -> True
           _ -> False
       )
-  Termbox.C.Event Termbox.C.EventResize _ _ _ w h _ _ -> EventResize w h
-  Termbox.C.Event Termbox.C.EventMouse _ key _ _ _ x y -> EventMouse (parseMouse key) x y
+  TbEvent TbEventTypeResize _ _ _ w h _ _ -> EventResize w h
+  TbEvent TbEventTypeMouse _ key _ _ _ x y -> EventMouse (parseMouse key) x y

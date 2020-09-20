@@ -4,14 +4,14 @@ module Termbox.Cursor
   )
 where
 
-import qualified Termbox.C
+import Termbox.C
 
 -- | Set the cursor coordinates (column, then row).
 setCursor :: Int -> Int -> IO ()
 setCursor =
-  Termbox.C.setCursor
+  tb_set_cursor
 
 -- | Hide the cursor.
 hideCursor :: IO ()
 hideCursor =
-  Termbox.C.setCursor Termbox.C._HIDE_CURSOR Termbox.C._HIDE_CURSOR
+  tb_set_cursor tB_HIDE_CURSOR tB_HIDE_CURSOR

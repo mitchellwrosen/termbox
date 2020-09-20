@@ -6,7 +6,7 @@ module Termbox.OutputMode
 where
 
 import Data.Functor (void)
-import qualified Termbox.C
+import Termbox.C
 
 -- | The output modes.
 --
@@ -29,24 +29,24 @@ data OutputMode
 -- | Get the current output mode.
 getOutputMode :: IO OutputMode
 getOutputMode =
-  f <$> Termbox.C.selectOutputMode Termbox.C.OutputModeCurrent
+  f <$> tb_select_output_mode TbOutputModeCurrent
   where
-    f :: Termbox.C.OutputMode -> OutputMode
+    f :: TbOutputMode -> OutputMode
     f = \case
-      Termbox.C.OutputModeNormal -> OutputModeNormal
-      Termbox.C.OutputMode256 -> OutputMode256
-      Termbox.C.OutputMode216 -> OutputMode216
-      Termbox.C.OutputModeGrayscale -> OutputModeGrayscale
-      Termbox.C.OutputModeCurrent -> error "termbox: getOutputMode returned OutputModeCurrent"
+      TbOutputModeNormal -> OutputModeNormal
+      TbOutputMode256 -> OutputMode256
+      TbOutputMode216 -> OutputMode216
+      TbOutputModeGrayscale -> OutputModeGrayscale
+      TbOutputModeCurrent -> error "termbox: getOutputMode returned OutputModeCurrent"
 
 -- | Set the output mode.
 setOutputMode :: OutputMode -> IO ()
 setOutputMode =
-  void . Termbox.C.selectOutputMode . f
+  void . tb_select_output_mode . f
   where
-    f :: OutputMode -> Termbox.C.OutputMode
+    f :: OutputMode -> TbOutputMode
     f = \case
-      OutputModeNormal -> Termbox.C.OutputModeNormal
-      OutputMode256 -> Termbox.C.OutputMode256
-      OutputMode216 -> Termbox.C.OutputMode216
-      OutputModeGrayscale -> Termbox.C.OutputModeGrayscale
+      OutputModeNormal -> TbOutputModeNormal
+      OutputMode256 -> TbOutputMode256
+      OutputMode216 -> TbOutputMode216
+      OutputModeGrayscale -> TbOutputModeGrayscale
