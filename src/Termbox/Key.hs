@@ -1,6 +1,18 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Termbox.Key
   ( Key (..),
     parseKey,
+    pattern KeyCtrlH,
+    pattern KeyCtrlLsqBracket,
+    pattern KeyCtrl2,
+    pattern KeyCtrl3,
+    pattern KeyCtrl4,
+    pattern KeyCtrl5,
+    pattern KeyCtrl7,
+    pattern KeyCtrlM,
+    pattern KeyCtrlI,
+    pattern KeyCtrlUnderscore,
   )
 where
 
@@ -15,41 +27,36 @@ data Key
   | KeyArrowRight
   | KeyArrowUp
   | KeyBackspace
-  | KeyBackspace2
-  | KeyCtrl2
-  | KeyCtrl3
-  | KeyCtrl4
-  | KeyCtrl5
+  | -- | Also: @Ctrl+H@
+    KeyCtrlBackspace
   | KeyCtrl6
-  | KeyCtrl7
   | KeyCtrl8
   | KeyCtrlA
   | KeyCtrlB
-  | KeyCtrlBackslash
+  | -- | Also: @Ctrl-4@
+    KeyCtrlBackslash
   | KeyCtrlC
   | KeyCtrlD
   | KeyCtrlE
   | KeyCtrlF
   | KeyCtrlG
-  | KeyCtrlH
-  | KeyCtrlI
   | KeyCtrlJ
   | KeyCtrlK
   | KeyCtrlL
-  | KeyCtrlLsqBracket
-  | KeyCtrlM
   | KeyCtrlN
   | KeyCtrlO
   | KeyCtrlP
   | KeyCtrlQ
   | KeyCtrlR
-  | KeyCtrlRsqBracket
+  | -- | Also: @Ctrl-5@
+    KeyCtrlRsqBracket
   | KeyCtrlS
-  | KeyCtrlSlash
+  | -- | Also: @Ctrl-/@, @Ctrl-_@
+    KeyCtrlSlash
+  | -- | Also: @Ctrl+2@
+    KeyCtrlTilde
   | KeyCtrlT
-  | KeyCtrlTilde
   | KeyCtrlU
-  | KeyCtrlUnderscore
   | KeyCtrlV
   | KeyCtrlW
   | KeyCtrlX
@@ -57,8 +64,10 @@ data Key
   | KeyCtrlZ
   | KeyDelete
   | KeyEnd
-  | KeyEnter
-  | KeyEsc
+  | -- | Also: @Ctrl-M@
+    KeyEnter
+  | -- | Also: @Ctrl-[@, @Ctrl-3@
+    KeyEsc
   | KeyF1
   | KeyF10
   | KeyF11
@@ -76,10 +85,40 @@ data Key
   | KeyPageDn
   | KeyPageUp
   | KeySpace
-  | KeyTab
+  | -- | Also: @Ctrl+I@
+    KeyTab
   deriving (Eq, Ord, Show)
 
--- | Parse a 'Key' from a 'TbKey'.
+pattern KeyCtrlH :: Key
+pattern KeyCtrlH = KeyCtrlBackspace
+
+pattern KeyCtrlLsqBracket :: Key
+pattern KeyCtrlLsqBracket = KeyEsc
+
+pattern KeyCtrl2 :: Key
+pattern KeyCtrl2 = KeyCtrlTilde
+
+pattern KeyCtrl3 :: Key
+pattern KeyCtrl3 = KeyEsc
+
+pattern KeyCtrl4 :: Key
+pattern KeyCtrl4 = KeyCtrlBackslash
+
+pattern KeyCtrl5 :: Key
+pattern KeyCtrl5 = KeyCtrlRsqBracket
+
+pattern KeyCtrl7 :: Key
+pattern KeyCtrl7 = KeyCtrlSlash
+
+pattern KeyCtrlM :: Key
+pattern KeyCtrlM = KeyEnter
+
+pattern KeyCtrlI :: Key
+pattern KeyCtrlI = KeyTab
+
+pattern KeyCtrlUnderscore :: Key
+pattern KeyCtrlUnderscore = KeyCtrlSlash
+
 parseKey :: Word16 -> Key
 parseKey key
   | key == tB_KEY_ARROW_DOWN = KeyArrowDown
@@ -87,13 +126,8 @@ parseKey key
   | key == tB_KEY_ARROW_RIGHT = KeyArrowRight
   | key == tB_KEY_ARROW_UP = KeyArrowUp
   | key == tB_KEY_BACKSPACE = KeyBackspace
-  | key == tB_KEY_BACKSPACE2 = KeyBackspace2
-  | key == tB_KEY_CTRL_2 = KeyCtrl2
-  | key == tB_KEY_CTRL_3 = KeyCtrl3
-  | key == tB_KEY_CTRL_4 = KeyCtrl4
-  | key == tB_KEY_CTRL_5 = KeyCtrl5
+  | key == tB_KEY_CTRL_TILDE = KeyCtrlTilde
   | key == tB_KEY_CTRL_6 = KeyCtrl6
-  | key == tB_KEY_CTRL_7 = KeyCtrl7
   | key == tB_KEY_CTRL_8 = KeyCtrl8
   | key == tB_KEY_CTRL_A = KeyCtrlA
   | key == tB_KEY_CTRL_B = KeyCtrlB
@@ -103,13 +137,10 @@ parseKey key
   | key == tB_KEY_CTRL_E = KeyCtrlE
   | key == tB_KEY_CTRL_F = KeyCtrlF
   | key == tB_KEY_CTRL_G = KeyCtrlG
-  | key == tB_KEY_CTRL_H = KeyCtrlH
-  | key == tB_KEY_CTRL_I = KeyCtrlI
+  | key == tB_KEY_CTRL_H = KeyCtrlBackspace
   | key == tB_KEY_CTRL_J = KeyCtrlJ
   | key == tB_KEY_CTRL_K = KeyCtrlK
   | key == tB_KEY_CTRL_L = KeyCtrlL
-  | key == tB_KEY_CTRL_LSQ_BRACKET = KeyCtrlLsqBracket
-  | key == tB_KEY_CTRL_M = KeyCtrlM
   | key == tB_KEY_CTRL_N = KeyCtrlN
   | key == tB_KEY_CTRL_O = KeyCtrlO
   | key == tB_KEY_CTRL_P = KeyCtrlP
@@ -119,9 +150,7 @@ parseKey key
   | key == tB_KEY_CTRL_S = KeyCtrlS
   | key == tB_KEY_CTRL_SLASH = KeyCtrlSlash
   | key == tB_KEY_CTRL_T = KeyCtrlT
-  | key == tB_KEY_CTRL_TILDE = KeyCtrlTilde
   | key == tB_KEY_CTRL_U = KeyCtrlU
-  | key == tB_KEY_CTRL_UNDERSCORE = KeyCtrlUnderscore
   | key == tB_KEY_CTRL_V = KeyCtrlV
   | key == tB_KEY_CTRL_W = KeyCtrlW
   | key == tB_KEY_CTRL_X = KeyCtrlX

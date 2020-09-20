@@ -12,20 +12,28 @@ main =
           x0 <- [0, 4 .. 48]
           pure (x0, y0, x0 + 3, y0 + 1)
 
-    Termbox.render
-      ( mconcat
-          ( zipWith
-              ( \(x0, y0, x1, y1) n ->
-                  rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
-                    <> string x0 y0 1 (fromInteger n) (show n)
+    let cells :: Maybe Termbox.Event -> Termbox.Cells
+        cells lastEvent =
+          mconcat
+              ( zipWith
+                  ( \(x0, y0, x1, y1) n ->
+                      rectangle x0 y0 x1 y1 (Termbox.Cell ' ' mempty (fromInteger n))
+                        <> string x0 y0 1 (fromInteger n) (show n)
+                  )
+                  rectangles
+                  [0 .. 255]
               )
-              rectangles
-              [0 .. 255]
-          )
-      )
-      Termbox.NoCursor
+              <> string 54 1 mempty mempty "Press Esc to quit."
+              <> string 54 3 mempty mempty ("Last event: " ++ show lastEvent)
 
-    void Termbox.poll
+    let loop :: Maybe Termbox.Event -> IO ()
+        loop lastEvent = do
+          Termbox.render (cells lastEvent) Termbox.NoCursor
+          Termbox.poll >>= \case
+            Termbox.EventKey Termbox.KeyEsc _ -> pure ()
+            event -> loop (Just event)
+
+    loop Nothing
 
 string :: Int -> Int -> Termbox.Attr -> Termbox.Attr -> [Char] -> Termbox.Cells
 string x0 y fg bg =

@@ -18,6 +18,7 @@ module Termbox.Attr
 where
 
 import Data.Bits ((.&.), (.|.))
+import Data.Semigroup (Semigroup (..))
 import Data.Word (Word16)
 import Termbox.Internal
 import Prelude hiding (reverse)

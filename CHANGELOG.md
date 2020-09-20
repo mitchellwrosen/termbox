@@ -18,11 +18,13 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 - Reset output mode to "normal" on shutdown to work around a small bug in termbox.c that retains the output mode across
   separate invocations of init/shutdown
 - Change type of `set` to construct a `Cells` rather than an `IO ()`
+- Changed a few keys into pattern synonyms because they overlap
 
 ### Removed
 - Remove `getInputMode`, `setInputMode`, `getOutputMode`, `setOutputMode`, `getCursor`, `hideCursor`, `clear`, `flush`
 - Remove `OutputMode`
 - Remove build dependency on `c2hs`
+- Remove support for GHC < 8.2
 
 ## [0.2.0.1] - 2020-06-27
 

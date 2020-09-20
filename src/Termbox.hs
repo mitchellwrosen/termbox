@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 -- |
 -- A @termbox@ program is typically constructed as an infinite loop that:
 --
@@ -55,6 +57,16 @@ module Termbox
     poll,
     Event (..),
     Key (..),
+    pattern KeyCtrlH,
+    pattern KeyCtrlLsqBracket,
+    pattern KeyCtrl2,
+    pattern KeyCtrl3,
+    pattern KeyCtrl4,
+    pattern KeyCtrl5,
+    pattern KeyCtrl7,
+    pattern KeyCtrlM,
+    pattern KeyCtrlI,
+    pattern KeyCtrlUnderscore,
     Mouse (..),
     PollError (..),
 
@@ -103,7 +115,19 @@ import Termbox.Cursor (Cursor (Cursor, NoCursor))
 import Termbox.Event (Event (..), PollError (..), poll)
 import Termbox.InputMode (InputMode (..), defaultInputMode, setInputMode)
 import Termbox.Internal
-import Termbox.Key (Key (..))
+import Termbox.Key
+  ( Key (..),
+    pattern KeyCtrl2,
+    pattern KeyCtrl3,
+    pattern KeyCtrl4,
+    pattern KeyCtrl5,
+    pattern KeyCtrl7,
+    pattern KeyCtrlH,
+    pattern KeyCtrlI,
+    pattern KeyCtrlLsqBracket,
+    pattern KeyCtrlM,
+    pattern KeyCtrlUnderscore,
+  )
 import Termbox.Mouse (Mouse (..))
 import Termbox.MouseMode (MouseMode (..))
 import Prelude hiding (reverse)
