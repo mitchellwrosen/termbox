@@ -88,7 +88,6 @@ where
 
 import Control.Exception
 import Control.Monad ((>=>))
-import Data.Bits ((.|.))
 import Data.Semigroup (Semigroup (..))
 import Termbox.Attr
   ( Attr,
