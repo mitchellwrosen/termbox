@@ -1,1 +1,0 @@
--c "cabal repl" --restart "termbox.cabal"
